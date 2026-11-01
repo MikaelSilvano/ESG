@@ -36,25 +36,28 @@ Seluruh **25 laporan** (DOID, DSSA, ELSA, INDY, ITMG × 2020–2024) sudah dinil
 | Perusahaan | 2020 | 2021 | 2022 | 2023 | 2024 |
 |---|---|---|---|---|---|
 | DEWA (manual, contoh) | 0,6745 | 0,5495 | 0,7708 | 0,7812 | 0,7812 |
-| DOID | 0,3625 | 0,3490 | 0,8229 | 0,8854 | 0,8646 |
+| DOID | 0,3278 | 0,3490 | 0,8229 | 0,8854 | 0,8646 |
 | DSSA | 0,3490 | 0,3490 | 0,6250 | 0,6458 | 0,7188 |
 | ELSA | 0,3125 | 0,4062 | 0,3958 | 0,7812 | 0,7812 |
-| INDY | 0,2757 | 0,8646 | 0,9062 | 0,8438 | 0,9167 |
+| INDY | 0,3590 | 0,8646 | 0,9062 | 0,8438 | 0,9167 |
 | ITMG | 0,7448 | 0,7188 | 0,8750 | 1,0000 | 1,0000 |
 
 **Akurasi terhadap penilaian manual DEWA (5 tahun): 586 dari 590 baris sama (99,3%).**
-Catatan jujur: model ML juga dilatih dari data DEWA yang sama, jadi angka ini belum membuktikan
-akurasi pada perusahaan lain. Karena itu hasil lima perusahaan **mohon dicek sampel**, terutama
-baris berwarna oranye di file bukti.
+Keempat baris yang berbeda adalah kasus di mana penilaian manual DEWA sendiri tidak sesuai aturan
+(mis. DEWA 2020 item 405-1 tercantum di indeks dengan hal. 149–150 tetapi diberi 0; DEWA 2021 405-1
+dan DEWA 2022 410-1/411-1 diberi 1 padahal nomor itemnya tidak tertulis di mana pun dalam laporan).
 
 **Hal yang perlu Anda ketahui sebelum memakai hasil:**
-- Hasil ini menilai **poin 1 hanya jika** ada rujukan halaman di tabel indeks GRI **atau** paragraf
-  bertanda kode GRI. Penjelasan tanpa kode & tanpa indeks **tidak otomatis** diberi 1 (pada
-  penilaian DEWA pun kata kunci saja tidak cukup). Pada 262 baris berpoin 0, kata kunci item
-  ditemukan di laporan dan ditandai **oranye** di file bukti; periksa dan ubah ke 1 di Excel bila perlu.
-  Pada pengujian ini komponen ML tidak memberi poin tambahan satu pun (tidak ada baris kuning).
+- Penilaian **hanya berdasarkan nomor item** (2-1, 102-1, 305-1, dst.). Pembahasan topik tanpa
+  menuliskan nomor itemnya **tidak** dihitung.
+- Item yang **tercantum di indeks GRI tetapi kolom halamannya kosong/"-"** diberi **0**, kecuali
+  nomor item itu tertulis di bagian lain laporan (baris ini ditandai oranye di file bukti).
+- Kolom halaman harus berisi **angka halaman**. Satu-satunya kasus lokasi berupa teks tanpa angka
+  adalah INDY 2023 item 405-2 ("Appendix") → diberi 0.
+- Bab di INDY 2020 diawali daftar "GRI ▶ 301-1, 302-1, …" sehingga nomor item tertulis di laporan
+  → beberapa item yang tidak berhalaman di indeks tetap mendapat 1 (sesuai aturan).
 - Indeks GRI **INDY 2020** susunannya tidak rapi di sumbernya (satu kode dipakai untuk beberapa topik,
-  mis. "GRI 301-1" muncul untuk bahan dan energi), jadi skor 0,2757 sebaiknya dicek manual.
+  mis. "GRI 301-1" muncul untuk bahan dan energi), jadi skornya sebaiknya dicek manual.
 - **ITMG 2023 dan 2024 bernilai 1,0000** karena seluruh 96 item tercantum lengkap dengan halaman di indeks GRI.
 - Laporan tahun 2020–2021 yang memakai opsi "Core" GRI 2016 hanya mencantumkan sebagian item 102-x
   sehingga skornya lebih rendah (itu sifat laporannya, bukan kesalahan baca).
@@ -145,7 +148,7 @@ Contoh tampilan saat berjalan:
 | Hanya perusahaan tertentu | `python3 esg.py nilai --perusahaan DOID ITMG` |
 | Lokasi folder/Excel berbeda | `python3 esg.py nilai --laporan "D:/SKRIPSI/LAPORAN KEBERLANJUTAN" --excel "D:/SKRIPSI/DATA SKRIPSI.xlsx"` |
 | Menilai ulang perusahaan yang sudah terisi | `python3 esg.py nilai --perusahaan ITMG --timpa` |
-| Tanpa komponen ML (murni aturan indeks GRI) | `python3 esg.py nilai --tanpa-ml` |
+| Tanpa pemeriksaan model ML | `python3 esg.py nilai --tanpa-ml` |
 | Nama file hasil sendiri | `python3 esg.py nilai --output "hasil/ESGD final.xlsx"` |
 
 ---
@@ -161,14 +164,15 @@ yang sama seperti DEWA.
 - Sheet **RINGKASAN**: skor ESG Disclosure tiap perusahaan & tahun.
 - Sheet **DETAIL**: setiap baris item, poin yang diberikan, dan **alasannya**, contoh:
   - `Indeks GRI hal. 34` → kode tercantum di tabel indeks GRI dengan rujukan halaman 34.
-  - `Penjelasan bertanda kode di hal. PDF 49, 50` → ada paragraf berlabel kode GRI di isi laporan.
+  - `Nomor item tertulis di laporan hal. PDF 49, 50` → nomor item (mis. "102-5") tertulis di isi laporan.
+  - `Di indeks tanpa halaman, tetapi nomor item tertulis di laporan ...` → poin 1.
   - `Mengikuti item utama 102-7: ...` → sub-item (102-7-a-i, 102-8-d, 103-2-c-vi).
-  - `Tidak ditemukan` → poin 0.
+  - `Tercantum di indeks GRI tanpa halaman/lokasi ...` → poin 0.
+  - `Nomor item tidak ditemukan` → poin 0.
 
-Warna baris yang **perlu Anda cek manual**:
-- 🟨 **Kuning** – poin 1 yang diberikan oleh model ML (penjelasan tanpa kode/indeks).
-- 🟧 **Oranye** – poin 0, tetapi kata kunci item tersebut muncul di laporan (tertulis halaman PDF-nya).
-  Bila menurut Anda isinya memang penjelasan item tersebut, ubah poinnya menjadi 1 di Excel.
+Warna baris:
+- 🟧 **Oranye** – item tercantum di indeks GRI tetapi tanpa angka halaman → poin 0.
+- 🟨 **Kuning** – model ML tidak setuju dengan aturan → mohon dicek manual (pada hasil saat ini: tidak ada).
 
 > "hal. PDF" = urutan halaman di file PDF (yang tampil di pembaca PDF), bisa berbeda dengan nomor
 > halaman yang tercetak di laporan.
@@ -177,12 +181,19 @@ Warna baris yang **perlu Anda cek manual**:
 
 ## 6. Aturan penilaian yang dipakai
 
+Penilaian **hanya melihat nomor item standar** (mis. 2-1, 102-1, 102-52, 305-1).
+
 | Kondisi | Poin |
 |---|---|
-| Ada penjelasan di laporan **dan** ada rujukan halaman/lokasi di tabel indeks GRI | 1 |
-| Ada penjelasan di laporan, **tidak** ada di tabel indeks GRI | 1 |
-| **Tidak** ada penjelasan, tetapi ada rujukan halaman/lokasi di tabel indeks GRI | 1 |
-| Tidak ada penjelasan **dan** tidak ada rujukan halaman/lokasi di tabel indeks GRI | 0 |
+| Di tabel indeks GRI, item tercantum **dengan angka halaman/page/lokasi** | 1 |
+| Di tabel indeks GRI tanpa angka halaman ("-"/kosong), **tetapi nomor item tertulis** di bagian lain laporan | 1 |
+| Tidak ada di tabel indeks GRI, **tetapi nomor item tertulis** di laporan | 1 |
+| Di tabel indeks GRI tanpa angka halaman **dan** nomor item tidak tertulis di bagian lain laporan | 0 |
+| Tidak ada di tabel indeks GRI dan nomor item tidak tertulis di laporan | 0 |
+| Topik dibahas di laporan, tetapi nomor itemnya **tidak** ditulis (mis. membahas siklus pelaporan tanpa "102-52") | 0 |
+
+"Nomor item tertulis di laporan" tidak menghitung halaman tabel indeks GRI itu sendiri maupun tabel
+pemetaan sejenis (tabel SDGs/POJK yang hanya mendaftar kode).
 
 **Perbedaan standar GRI per tahun:**
 - **2020–2021 (GRI 2016)** – baris governance dinilai **satu per satu** memakai kode kolom D
@@ -208,18 +219,18 @@ item 2-x dinilai dari kode 102-x pengganti; bila laporan 2020–2021 sudah memak
 ```
 PDF ──► 1. Baca teks + posisi kata tiap halaman (PyMuPDF)
      ──► 2. Temukan tabel "GRI Content Index" & baca kolom Halaman/Page tiap kode
-     ──► 3. Cari tanda kode GRI di isi laporan, mis. "(102-5)", "[305-1]", "GRI 2-9"
-     ──► 4. Model ML (TF-IDF + Logistic Regression) menilai apakah item dijelaskan
-            walaupun tanpa kode
-     ──► 5. Terapkan aturan skripsi (bagian 6) ──► isi Excel + file bukti
+     ──► 3. Cari nomor item GRI di isi laporan, mis. "102-5", "(102-5)", "[305-1]", "GRI 2-9"
+     ──► 4. Terapkan aturan skripsi (bagian 6) ──► isi Excel + file bukti
+     ──► 5. Model ML (Logistic Regression) memeriksa ulang setiap poin
 ```
 
 - **Langkah 2** membaca tata letak tabel (posisi kolom kode dan kolom "Halaman/Page"), sehingga
-  bisa membedakan "kode dengan nomor halaman" dan "kode tanpa halaman / tidak relevan".
-- **Langkah 4 (ML)**: setiap halaman diubah menjadi vektor **TF-IDF**, dibandingkan dengan deskripsi
-  item GRI (judul Indonesia/Inggris + kata kunci di `esg_disclosure/data/gri_catalog.json`).
-  Fitur-fitur tersebut dimasukkan ke model **Logistic Regression** yang **dilatih dari penilaian
-  manual DEWA**, sehingga program meniru cara Anda menilai. Model tersimpan di `model/model_esg.joblib`.
+  bisa membedakan "kode dengan angka halaman" dan "kode tanpa halaman (- / kosong)". Tabel dua
+  halaman berdampingan (spread) juga ditangani: angka dari tabel sebelah tidak ikut terbaca.
+- **Langkah 5 (ML)**: model **Logistic Regression** dilatih dari penilaian manual DEWA 2020–2024
+  dengan fitur: ada angka halaman di indeks, tercantum di indeks tanpa halaman, dan jumlah halaman
+  yang menuliskan nomor item. Poin akhir tetap mengikuti aturan skripsi; bila model tidak setuju,
+  baris diberi warna kuning di file bukti agar dicek. Model tersimpan di `model/model_esg.joblib`.
 - Daftar item **dibaca langsung dari sheet ESGD**, jadi bila Anda menambah/mengubah item di Excel,
   program otomatis mengikutinya.
 
@@ -264,8 +275,8 @@ Contoh keluaran:
 ```
 == DEWA 2021
       cocok 117/118 baris | skor program 0.5391 vs manual 0.5495
-        baris 112 405-1    program=0 manual=1 | Tidak ditemukan | CEK MANUAL: kata kunci 'keberagaman' muncul di hal. PDF 106
-Akurasi keseluruhan: 117/118 = 99.2%
+        baris 112 405-1    program=0 manual=1 | Nomor item tidak ditemukan
+Akurasi keseluruhan: 586/590 = 99.3%
 ```
 
 Setiap kali Anda selesai mengoreksi hasil sebuah perusahaan secara manual di Excel, perusahaan itu
@@ -279,7 +290,7 @@ bisa dipakai juga sebagai data latih: `python3 esg.py latih --perusahaan DEWA IT
 |---|---|
 | `File Excel tidak ditemukan` | Periksa nama file (`DATA SKRIPSI.xlsx`) atau tulis lokasinya dengan `--excel "..."` |
 | `folder kosong (belum ada PDF)` | Masukkan PDF ke folder perusahaan tersebut |
-| `Tabel indeks GRI tidak terdeteksi` | Laporan tanpa indeks GRI; penilaian hanya dari tanda kode & ML – cek manual file bukti |
+| `Tabel indeks GRI tidak terdeteksi` | Laporan tanpa indeks GRI; penilaian hanya dari nomor item yang tertulis di laporan – cek manual file bukti |
 | `kemungkinan PDF hasil scan` | PDF berupa gambar, teks tidak bisa dibaca; cari versi PDF lain dari situs perusahaan/BEI |
 | `#DIV/0!` di baris rata-rata | Tahun tersebut belum ada PDF-nya (kolom kosong) |
 | `python3` tidak dikenal (Windows) | Pakai `python` atau `py` sebagai gantinya |
@@ -294,13 +305,11 @@ esg_disclosure/
   cli.py                    <- perintah nilai / latih / uji
   pdf_reader.py             <- membaca PDF (teks + posisi kata)
   gri_index.py              <- membaca tabel GRI Content Index
-  body_tags.py              <- mencari tanda kode GRI di isi laporan
-  semantic.py               <- fitur ML (TF-IDF, kata kunci)
+  body_tags.py              <- mencari nomor item GRI di isi laporan
   model.py                  <- melatih/memuat model Logistic Regression
   scorer.py                 <- aturan penilaian 0/1 & skor
   template.py               <- membaca struktur sheet ESGD
   excel_writer.py           <- menulis blok perusahaan ke Excel (format seperti DEWA)
-  data/gri_catalog.json     <- deskripsi & kata kunci tiap item GRI (boleh ditambah)
 model/model_esg.joblib      <- model ML terlatih
 tests/                      <- tes otomatis (python3 -m pytest)
 ```

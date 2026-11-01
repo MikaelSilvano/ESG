@@ -27,7 +27,15 @@ OMIT_RE = re.compile(
     r"not\s+(applicable|available|reported|disclosed|material)|\bn/?a\b|omitted|dikecualikan)",
     re.I,
 )
-ANNUAL_REF_RE = re.compile(r"(laporan\s+tahunan|annual\s+report|\bAR\b|\bLT\b)", re.I)
+# lokasi berupa teks, mis. "Laporan Tahunan", "Annual Report", "Appendix/Lampiran", "Website"
+ANNUAL_REF_RE = re.compile(r"(laporan\s+tahunan|annual\s+report|\bAR\b|\bLT\b|appendix|lampiran|website|situs)", re.I)
+LOCATION_WORD_RE = re.compile(r"^(laporan|tahunan|annual|report|appendix|lampiran|website|situs|AR|LT)[,.;]?$", re.I)
+
+
+def _is_page_header(text: str) -> bool:
+    """'Halaman', 'Page', 'Halaman/Page', 'Halaman|', 'Hal.' ..."""
+    parts = [p for p in re.split(r"[/|:]", text.strip()) if p.strip(" .")]
+    return bool(parts) and any(HEADER_PAGE_RE.match(p.strip(" .")) for p in parts)
 
 
 @dataclass
@@ -36,15 +44,13 @@ class IndexEntry:
     page: int                     # halaman PDF tempat kode tercantum di indeks
     location: str = ""            # isi kolom halaman/lokasi
     row_text: str = ""            # seluruh teks baris (untuk audit)
+    via_header: bool = True       # kolom halaman ditemukan dari header "Halaman/Page"
 
     @property
     def has_location(self) -> bool:
-        loc = self.location.strip()
-        if not loc:
-            return False
-        if re.search(r"\d", loc) or URL_RE.search(loc) or ANNUAL_REF_RE.search(loc):
-            return True
-        return False
+        """Poin indeks hanya bila kolom halaman/lokasi memuat ANGKA halaman.
+        "-", "N/A", kosong, atau teks tanpa angka (mis. "Laporan Tahunan") = tidak ada halaman."""
+        return any(PAGE_TOKEN_RE.match(t) for t in self.location.split())
 
     @property
     def omitted(self) -> bool:
@@ -69,6 +75,10 @@ class GriIndex:
         locs = [e.location for e in self.entries.get(code, []) if e.has_location]
         return "; ".join(dict.fromkeys(locs))
 
+    def raw_location(self, code: str) -> str:
+        """Isi kolom halaman/lokasi apa adanya (termasuk teks tanpa angka)."""
+        return "; ".join(dict.fromkeys(e.location for e in self.entries.get(code, []) if e.location))
+
     def codes(self) -> set[str]:
         return set(self.entries)
 
@@ -76,7 +86,7 @@ class GriIndex:
 def _code_tokens(page: Page) -> list[tuple[Word, str]]:
     out = []
     words = page.words
-    hdr = [w for w in words if HEADER_PAGE_RE.match(w.text.strip(" |:."))]
+    hdr = [w for w in words if _is_page_header(w.text)]
     for i, w in enumerate(words):
         m = CODE_TOKEN_RE.match(w.text.strip())
         if not m:
@@ -114,7 +124,7 @@ def _index_layout(page: Page) -> tuple[bool, bool]:
     if top_col < 4:
         return False, False
     first_y = _first_code_y(toks)
-    has_header = any(HEADER_PAGE_RE.match(w.text.strip(" |:.")) and w.y0 < first_y + 2 for w in page.words)
+    has_header = any(_is_page_header(w.text) and w.y0 < first_y - 3 for w in page.words)
     return True, has_header
 
 
@@ -134,21 +144,26 @@ def find_index_pages(doc: Document) -> list[int]:
 
 def _in_margin(page: Page, w: Word) -> bool:
     """Header/footer halaman (nomor halaman laporan, judul bab) diabaikan."""
-    return w.y0 > page.height * 0.94 or w.y1 < page.height * 0.06
+    return w.y0 > page.height * 0.92 or w.y1 < page.height * 0.06
 
 
 def _is_location_token(t: Word) -> bool:
     s = t.text.strip()
-    return bool(PAGE_TOKEN_RE.match(s) or URL_RE.search(s) or ANNUAL_REF_RE.fullmatch(s))
+    if re.fullmatch(r"\d{1,3}([.,]\d{3}){2,}", s) or ",000" in s or ".000" in s:
+        return False   # angka ribuan (mis. 1,000,000), bukan nomor halaman
+    return bool(PAGE_TOKEN_RE.match(s) or URL_RE.search(s) or LOCATION_WORD_RE.match(s))
 
 
 def _parse_page(page: Page, index: GriIndex) -> None:
     toks = _code_tokens(page)
     first_code_y = _first_code_y(toks)
     # header kolom "Halaman/Page": harus berada di atas kode pertama (kepala tabel)
-    headers = [w for w in page.words if HEADER_PAGE_RE.match(w.text.strip(" |:."))
-               and w.y0 < first_code_y + 2 and not _in_margin(page, w)]
-    other_hdr_x = sorted({round(w.x0) for w in page.words if w.y0 < first_code_y + 2 and re.match(
+    headers = [w for w in page.words if _is_page_header(w.text)
+               and w.y0 < first_code_y - 3 and not _in_margin(page, w)]
+    if headers:   # hanya baris kepala tabel paling atas (bukan kata "Lokasi" di judul item)
+        top = min(h.y0 for h in headers)
+        headers = [h for h in headers if h.y0 <= top + 30]
+    other_hdr_x = sorted({round(w.x0) for w in page.words if w.y0 < first_code_y - 3 and re.match(
         r"^(omission|alasan|keterangan|pengecualian|reason|sdgs?|pojk|description|deskripsi)$",
         w.text.strip(), re.I)})
     body = [t for t in page.words if not _in_margin(page, t)]
@@ -156,7 +171,7 @@ def _parse_page(page: Page, index: GriIndex) -> None:
     for w, code in toks:
         below = [t for t, _ in toks if abs(t.x0 - w.x0) < 30 and t.y0 > w.y0 + 3]
         next_y = min((t.y0 for t in below), default=w.y0 + 60)
-        y_top, y_bot = w.y0 - 8, min(next_y - 4, w.y0 + 60)
+        y_top, y_bot = w.y0 - 8, min(next_y - 4, w.y0 + 45)
         row_words = [t for t in body if y_top <= t.y0 <= y_bot and t.x0 > w.x1 - 1
                      and not CODE_TOKEN_RE.match(t.text.strip())]
         row_text = " ".join(t.text for t in row_words)
@@ -170,11 +185,12 @@ def _parse_page(page: Page, index: GriIndex) -> None:
             right = min(min(nxt) - 2 if nxt else page.width, h.x1 + 45)
             left = h.x0 - 50
             loc_words = [t for t in row_words if left <= t.xc <= right and _is_location_token(t)]
-        if not loc_words:
-            # tanpa header yang jelas: ambil token angka halaman di sisi kanan baris
+        else:
+            # tanpa header kolom yang jelas: ambil token angka halaman di sisi kanan baris.
+            # (Bila header ada tetapi kolomnya "-" / kosong, artinya TIDAK ada halaman -> poin 0.)
             loc_words = [t for t in row_words if t.x0 > w.x1 + 120 and _is_location_token(t)]
         location = " ".join(t.text for t in sorted(loc_words, key=lambda t: (round(t.y0), t.x0)))
-        index.add(IndexEntry(code, page.number, location, row_text))
+        index.add(IndexEntry(code, page.number, location, row_text, bool(hdrs)))
 
 
 def parse_gri_index(doc: Document) -> GriIndex:
