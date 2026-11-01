@@ -12,7 +12,7 @@ from .codes import CODE_TOKEN_RE
 from .pdf_reader import Document, Page, Word
 
 HEADER_PAGE_RE = re.compile(
-    r"^(halaman|hal\.?|page|pages|page\(s\)|lokasi|location|referensi|reference|references|rujukan|bab|chapter|section)$",
+    r"^(halaman|hal\.?|page|pages|page\(s\)|lokasi|location|rujukan)$",
     re.I
 )
 INDEX_HINT_RE = re.compile(
@@ -76,7 +76,7 @@ class GriIndex:
 def _code_tokens(page: Page) -> list[tuple[Word, str]]:
     out = []
     words = page.words
-    hdr = [w for w in words if HEADER_PAGE_RE.match(w.text.strip())]
+    hdr = [w for w in words if HEADER_PAGE_RE.match(w.text.strip(" |:."))]
     for i, w in enumerate(words):
         m = CODE_TOKEN_RE.match(w.text.strip())
         if not m:
@@ -87,7 +87,7 @@ def _code_tokens(page: Page) -> list[tuple[Word, str]]:
             prev = words[i - 1].text if i > 0 else ""
             if re.fullmatch(r"\d+[,.]?", prev) and abs(words[i - 1].y0 - w.y0) < 2:
                 continue
-            if any(h.y0 < w.y0 and h.x0 - 30 <= w.xc <= h.x1 + 30 for h in hdr):
+            if any(h.y0 < w.y0 and h.x0 - 10 <= w.xc <= h.x1 + 10 for h in hdr):
                 continue
         out.append((w, code))
     return out
@@ -114,7 +114,7 @@ def _index_layout(page: Page) -> tuple[bool, bool]:
     if top_col < 4:
         return False, False
     first_y = _first_code_y(toks)
-    has_header = any(HEADER_PAGE_RE.match(w.text.strip()) and w.y0 < first_y + 2 for w in page.words)
+    has_header = any(HEADER_PAGE_RE.match(w.text.strip(" |:.")) and w.y0 < first_y + 2 for w in page.words)
     return True, has_header
 
 
@@ -126,7 +126,7 @@ def find_index_pages(doc: Document) -> list[int]:
         table, header = _index_layout(page)
         if not table:
             continue
-        hint = bool(INDEX_HINT_RE.search(page.text)) or "GRI" in page.text
+        hint = bool(INDEX_HINT_RE.search(page.text)) or bool(re.search(r"\b(GRI|indeks|index)\b", page.text, re.I))
         if (header and hint) or (pages and pages[-1] >= page.number - 2):
             pages.append(page.number)
     return pages
@@ -146,7 +146,7 @@ def _parse_page(page: Page, index: GriIndex) -> None:
     toks = _code_tokens(page)
     first_code_y = _first_code_y(toks)
     # header kolom "Halaman/Page": harus berada di atas kode pertama (kepala tabel)
-    headers = [w for w in page.words if HEADER_PAGE_RE.match(w.text.strip())
+    headers = [w for w in page.words if HEADER_PAGE_RE.match(w.text.strip(" |:."))
                and w.y0 < first_code_y + 2 and not _in_margin(page, w)]
     other_hdr_x = sorted({round(w.x0) for w in page.words if w.y0 < first_code_y + 2 and re.match(
         r"^(omission|alasan|keterangan|pengecualian|reason|sdgs?|pojk|description|deskripsi)$",

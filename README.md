@@ -24,30 +24,40 @@ Bisa dipakai untuk **perusahaan mana pun**: cukup tambahkan folder baru berisi P
 
 ## 1. Status hasil saat ini
 
-File hasil ada di folder [`hasil/`](hasil):
+Seluruh **25 laporan** (DOID, DSSA, ELSA, INDY, ITMG × 2020–2024) sudah dinilai. File hasil ada di folder [`hasil/`](hasil):
 
 | File | Isi |
 |---|---|
-| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD yang sudah terisi |
+| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk kelima perusahaan (DEWA tetap seperti aslinya) |
 | `hasil/BUKTI PENILAIAN - DATA SKRIPSI.xlsx` | Ringkasan skor + alasan/bukti setiap poin (halaman PDF) |
 
-> **Penting:** sejauh ini baru **3 dari 25 laporan** yang bisa dinilai, karena hanya PDF berukuran
-> kecil (< 6,5 MB) yang bisa diambil dari Google Drive oleh lingkungan cloud tempat program ini dibuat.
-> Jalankan program di komputer Anda sendiri (langkah 2–4) agar **kelima perusahaan** terisi lengkap.
+**Skor ESG Disclosure**
 
 | Perusahaan | 2020 | 2021 | 2022 | 2023 | 2024 |
 |---|---|---|---|---|---|
-| DOID | – | – | **0,8229** | – | – |
-| DSSA | **0,3490** | – | – | – | – |
-| ELSA | – | – | – | – | – |
-| INDY | – | – | – | – | – |
-| ITMG | **0,7448** | – | – | – | – |
+| DEWA (manual, contoh) | 0,6745 | 0,5495 | 0,7708 | 0,7812 | 0,7812 |
+| DOID | 0,3625 | 0,3490 | 0,8229 | 0,8854 | 0,8646 |
+| DSSA | 0,3490 | 0,3490 | 0,6250 | 0,6458 | 0,7188 |
+| ELSA | 0,3125 | 0,4062 | 0,3958 | 0,7812 | 0,7812 |
+| INDY | 0,2757 | 0,8646 | 0,9062 | 0,8438 | 0,9167 |
+| ITMG | 0,7448 | 0,7188 | 0,8750 | 1,0000 | 1,0000 |
 
-"–" = PDF belum diproses (kolom di Excel masih kosong, sehingga rumus menampilkan `#DIV/0!`).
+**Akurasi terhadap penilaian manual DEWA (5 tahun): 586 dari 590 baris sama (99,3%).**
+Catatan jujur: model ML juga dilatih dari data DEWA yang sama, jadi angka ini belum membuktikan
+akurasi pada perusahaan lain. Karena itu hasil lima perusahaan **mohon dicek sampel**, terutama
+baris berwarna oranye di file bukti.
 
-**Akurasi terhadap penilaian manual DEWA 2021: 117 dari 118 baris sama (99,2%).**
-
----
+**Hal yang perlu Anda ketahui sebelum memakai hasil:**
+- Hasil ini menilai **poin 1 hanya jika** ada rujukan halaman di tabel indeks GRI **atau** paragraf
+  bertanda kode GRI. Penjelasan tanpa kode & tanpa indeks **tidak otomatis** diberi 1 (pada
+  penilaian DEWA pun kata kunci saja tidak cukup). Pada 262 baris berpoin 0, kata kunci item
+  ditemukan di laporan dan ditandai **oranye** di file bukti; periksa dan ubah ke 1 di Excel bila perlu.
+  Pada pengujian ini komponen ML tidak memberi poin tambahan satu pun (tidak ada baris kuning).
+- Indeks GRI **INDY 2020** susunannya tidak rapi di sumbernya (satu kode dipakai untuk beberapa topik,
+  mis. "GRI 301-1" muncul untuk bahan dan energi), jadi skor 0,2757 sebaiknya dicek manual.
+- **ITMG 2023 dan 2024 bernilai 1,0000** karena seluruh 96 item tercantum lengkap dengan halaman di indeks GRI.
+- Laporan tahun 2020–2021 yang memakai opsi "Core" GRI 2016 hanya mencantumkan sebagian item 102-x
+  sehingga skornya lebih rendah (itu sifat laporannya, bukan kesalahan baca).
 
 ## 2. Persiapan (sekali saja)
 
@@ -236,9 +246,8 @@ python3 esg.py nilai --excel "hasil/DATA SKRIPSI - HASIL.xlsx" --output "hasil/D
 
 ## 9. Melatih ulang & menguji model
 
-Model bawaan baru dilatih dari **DEWA 2021** (satu-satunya laporan DEWA yang tersedia saat
-program dibuat). Setelah semua PDF DEWA (2020–2024) ada di folder, latih ulang supaya model
-belajar dari 5 tahun penilaian manual:
+Model bawaan sudah dilatih dari **DEWA 2020–2024** (5 laporan, 520 data). Bila Anda menambah atau
+mengoreksi penilaian manual, latih ulang dengan:
 
 ```bash
 python3 esg.py latih --perusahaan DEWA
