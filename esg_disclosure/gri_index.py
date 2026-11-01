@@ -48,9 +48,11 @@ class IndexEntry:
 
     @property
     def has_location(self) -> bool:
-        """Poin indeks hanya bila kolom halaman/lokasi memuat ANGKA halaman.
-        "-", "N/A", kosong, atau teks tanpa angka (mis. "Laporan Tahunan") = tidak ada halaman."""
-        return any(PAGE_TOKEN_RE.match(t) for t in self.location.split())
+        """Ada rujukan halaman/lokasi: angka halaman, atau lokasi tertulis seperti
+        "Appendix/Lampiran", "Laporan Tahunan", alamat website. "-", "N/A", kosong = tidak ada."""
+        loc = self.location
+        return (any(PAGE_TOKEN_RE.match(t) for t in loc.split())
+                or bool(URL_RE.search(loc)) or bool(ANNUAL_REF_RE.search(loc)))
 
     @property
     def omitted(self) -> bool:

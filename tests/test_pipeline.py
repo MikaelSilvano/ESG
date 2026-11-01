@@ -120,3 +120,19 @@ def test_index_without_page_but_number_in_body(tmp_path, tmpl):
     res = {r.row: r.score for r in score_document(an, t, 2021)}
     assert res[5] == 1   # 102-1: nomor item tertulis di isi laporan
     assert res[6] == 0   # 102-3: hanya dibahas ("kantor pusat") tanpa nomor item
+
+
+def test_chapter_code_list_not_counted_and_text_location(tmp_path, tmpl):
+    """Daftar kode di pembuka bab ("GRI ▶ 305-1, 305-6, 102-3") tidak dihitung sebagai penjelasan;
+    lokasi berupa teks ("Appendix") di kolom halaman indeks dihitung sebagai rujukan lokasi."""
+    wb, ws, t = tmpl
+    pdf = tmp_path / "2020.pdf"
+    make_pdf(pdf, [("102-1", "Nama organisasi", "Appendix"), ("102-3", "Lokasi kantor pusat", "-"),
+                   ("102-7", "Skala organisasi", "20"), ("102-8", "Karyawan", "21"),
+                   ("305-1", "Emisi langsung", "-")],
+             body_pages=["KINERJA LINGKUNGAN GRI > 305-1, 305-6, 102-3 Global Compact Principle 7"])
+    an = DocumentAnalyzer(read_pdf(pdf))
+    res = {r.row: r.score for r in score_document(an, t, 2020)}
+    assert res[5] == 1    # 102-1: lokasi "Appendix"
+    assert res[6] == 0    # 102-3: hanya di daftar kode pembuka bab
+    assert res[10] == 0   # 305-1: idem

@@ -35,27 +35,27 @@ Seluruh **25 laporan** (DOID, DSSA, ELSA, INDY, ITMG × 2020–2024) sudah dinil
 
 | Perusahaan | 2020 | 2021 | 2022 | 2023 | 2024 |
 |---|---|---|---|---|---|
-| DEWA (manual, contoh) | 0,6745 | 0,5495 | 0,7708 | 0,7812 | 0,7812 |
+| DEWA (manual, dikoreksi) | 0,6849 | 0,5391 | 0,7500 | 0,7812 | 0,7812 |
 | DOID | 0,3278 | 0,3490 | 0,8229 | 0,8854 | 0,8646 |
 | DSSA | 0,3490 | 0,3490 | 0,6250 | 0,6458 | 0,7188 |
 | ELSA | 0,3125 | 0,4062 | 0,3958 | 0,7812 | 0,7812 |
-| INDY | 0,3590 | 0,8646 | 0,9062 | 0,8438 | 0,9167 |
+| INDY | 0,2757 | 0,8646 | 0,9062 | 0,8542 | 0,9167 |
 | ITMG | 0,7448 | 0,7188 | 0,8750 | 1,0000 | 1,0000 |
 
-**Akurasi terhadap penilaian manual DEWA (5 tahun): 586 dari 590 baris sama (99,3%).**
-Keempat baris yang berbeda adalah kasus di mana penilaian manual DEWA sendiri tidak sesuai aturan
-(mis. DEWA 2020 item 405-1 tercantum di indeks dengan hal. 149–150 tetapi diberi 0; DEWA 2021 405-1
-dan DEWA 2022 410-1/411-1 diberi 1 padahal nomor itemnya tidak tertulis di mana pun dalam laporan).
+**Akurasi terhadap penilaian manual DEWA (5 tahun, setelah koreksi): 590 dari 590 baris sama (100%).**
+Empat nilai manual DEWA dikoreksi sesuai aturan (sudah dikonfirmasi): 2020 item 405-1 → 1 (indeks
+hal. 149–150); 2021 item 405-1 → 0; 2022 item 410-1 dan 411-1 → 0 (nomor item tidak tertulis di laporan).
+Di file hasil, blok DEWA memakai nilai yang sudah dikoreksi ini.
 
 **Hal yang perlu Anda ketahui sebelum memakai hasil:**
 - Penilaian **hanya berdasarkan nomor item** (2-1, 102-1, 305-1, dst.). Pembahasan topik tanpa
   menuliskan nomor itemnya **tidak** dihitung.
 - Item yang **tercantum di indeks GRI tetapi kolom halamannya kosong/"-"** diberi **0**, kecuali
   nomor item itu tertulis di bagian lain laporan (baris ini ditandai oranye di file bukti).
-- Kolom halaman harus berisi **angka halaman**. Satu-satunya kasus lokasi berupa teks tanpa angka
-  adalah INDY 2023 item 405-2 ("Appendix") → diberi 0.
-- Bab di INDY 2020 diawali daftar "GRI ▶ 301-1, 302-1, …" sehingga nomor item tertulis di laporan
-  → beberapa item yang tidak berhalaman di indeks tetap mendapat 1 (sesuai aturan).
+- Kolom halaman/lokasi boleh berisi **angka halaman** atau **lokasi tertulis** (mis. "Appendix",
+  "Lampiran", "Laporan Tahunan", alamat website) → poin 1. Contoh: INDY 2023 item 405-2 ("Appendix").
+- **Daftar nomor item di pembuka bab** (mis. INDY 2020: "GRI ▶ 301-1, 302-1, 302-2, …") **tidak**
+  dihitung, karena hanya judul/daftar isi bab tanpa penjelasan.
 - Indeks GRI **INDY 2020** susunannya tidak rapi di sumbernya (satu kode dipakai untuk beberapa topik,
   mis. "GRI 301-1" muncul untuk bahan dan energi), jadi skornya sebaiknya dicek manual.
 - **ITMG 2023 dan 2024 bernilai 1,0000** karena seluruh 96 item tercantum lengkap dengan halaman di indeks GRI.
@@ -171,7 +171,7 @@ yang sama seperti DEWA.
   - `Nomor item tidak ditemukan` → poin 0.
 
 Warna baris:
-- 🟧 **Oranye** – item tercantum di indeks GRI tetapi tanpa angka halaman → poin 0.
+- 🟧 **Oranye** – item tercantum di indeks GRI tetapi tanpa halaman/lokasi → poin 0.
 - 🟨 **Kuning** – model ML tidak setuju dengan aturan → mohon dicek manual (pada hasil saat ini: tidak ada).
 
 > "hal. PDF" = urutan halaman di file PDF (yang tampil di pembaca PDF), bisa berbeda dengan nomor
@@ -185,15 +185,16 @@ Penilaian **hanya melihat nomor item standar** (mis. 2-1, 102-1, 102-52, 305-1).
 
 | Kondisi | Poin |
 |---|---|
-| Di tabel indeks GRI, item tercantum **dengan angka halaman/page/lokasi** | 1 |
+| Di tabel indeks GRI, item tercantum **dengan angka halaman/page atau lokasi tertulis** (mis. "Appendix") | 1 |
 | Di tabel indeks GRI tanpa angka halaman ("-"/kosong), **tetapi nomor item tertulis** di bagian lain laporan | 1 |
 | Tidak ada di tabel indeks GRI, **tetapi nomor item tertulis** di laporan | 1 |
 | Di tabel indeks GRI tanpa angka halaman **dan** nomor item tidak tertulis di bagian lain laporan | 0 |
 | Tidak ada di tabel indeks GRI dan nomor item tidak tertulis di laporan | 0 |
 | Topik dibahas di laporan, tetapi nomor itemnya **tidak** ditulis (mis. membahas siklus pelaporan tanpa "102-52") | 0 |
 
-"Nomor item tertulis di laporan" tidak menghitung halaman tabel indeks GRI itu sendiri maupun tabel
-pemetaan sejenis (tabel SDGs/POJK yang hanya mendaftar kode).
+"Nomor item tertulis di laporan" tidak menghitung halaman tabel indeks GRI itu sendiri, tabel
+pemetaan sejenis (tabel SDGs/POJK yang hanya mendaftar kode), maupun daftar nomor item di pembuka
+bab (mis. "GRI ▶ 301-1, 302-1, 302-2, …").
 
 **Perbedaan standar GRI per tahun:**
 - **2020–2021 (GRI 2016)** – baris governance dinilai **satu per satu** memakai kode kolom D

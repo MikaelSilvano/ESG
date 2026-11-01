@@ -102,7 +102,7 @@ class DocumentAnalyzer:
             return 1, f"Nomor item tertulis di laporan hal. PDF {pages}", ev
         if ev.index_listed:
             loc = self.index.raw_location(code)
-            what = f'lokasi "{loc}" tanpa angka halaman' if loc else "tanpa halaman/lokasi"
+            what = f'dengan isi kolom "{loc}" (bukan rujukan halaman/lokasi)' if loc else "tanpa halaman/lokasi"
             return 0, f"Tercantum di indeks GRI {what} & nomor item tidak tertulis di laporan", ev
         return 0, "Nomor item tidak ditemukan", ev
 
