@@ -1,8 +1,9 @@
 """Pelatihan & pemuatan model Machine Learning (Logistic Regression).
 
 Model belajar dari perusahaan yang SUDAH dinilai manual di Excel (contoh: DEWA).
-Fitur per item: ada di indeks dengan halaman, ada di indeks tanpa halaman, jumlah
-halaman bertanda kode, kemiripan TF-IDF, cakupan kata kunci.
+Fitur per item: ada angka halaman di indeks GRI, tercantum di indeks tanpa halaman,
+jumlah halaman laporan yang menuliskan nomor item. Poin akhir tetap mengikuti aturan
+skripsi; model dipakai untuk menandai baris yang perlu dicek.
 """
 from __future__ import annotations
 

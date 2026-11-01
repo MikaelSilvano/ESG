@@ -104,11 +104,12 @@ def cmd_nilai(a) -> None:
             res = score_document(an, t, year)
             write_scores(ws, t, comp, year, {r.row: r.score for r in res})
             sc = esg_score(res, t)
-            n_ml = sum(1 for r in res if r.source.startswith("ML"))
-            summary.append((comp, year, sc, f"{n_ml} poin dari ML (perlu dicek)" if n_ml else ""))
+            n_ml = sum(1 for r in res if r.ml_disagrees)
+            summary.append((comp, year, sc, f"{n_ml} baris: model ML tidak setuju dengan aturan (cek)" if n_ml else ""))
             _log(f"      skor ESG Disclosure = {sc:.4f}")
             for r in res:
-                evidence_rows.append((comp, year, r.row, r.item, r.code_used, r.score, r.source))
+                src = r.source + (" | ML tidak setuju - mohon dicek" if r.ml_disagrees else "")
+                evidence_rows.append((comp, year, r.row, r.item, r.code_used, r.score, src))
     out.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out)
     bukti = out.with_name(f"BUKTI PENILAIAN - {excel.stem}.xlsx")
@@ -125,11 +126,12 @@ def _write_evidence(path: Path, summary, rows) -> None:
         s.append([comp, year, round(sc, 4) if sc is not None else None, note])
     d = wb.create_sheet("DETAIL")
     d.append(["Kode", "Tahun", "Baris Excel", "Item GRI", "Kode yang dinilai", "Poin", "Sumber bukti"])
-    yellow = PatternFill("solid", fgColor="FFF2CC")   # poin 1 dari ML -> mohon dicek
-    orange = PatternFill("solid", fgColor="FCE4D6")   # poin 0 tetapi ada kata kunci -> mohon dicek
+    yellow = PatternFill("solid", fgColor="FFF2CC")   # model ML tidak setuju dengan aturan -> mohon dicek
+    orange = PatternFill("solid", fgColor="FCE4D6")   # di indeks tanpa halaman -> poin 0
     for row in rows:
         d.append(list(row))
-        fill = yellow if str(row[6]).startswith("ML") else orange if "CEK MANUAL" in str(row[6]) else None
+        src = str(row[6])
+        fill = yellow if "ML tidak setuju" in src else orange if src.startswith("Tercantum di indeks") else None
         if fill:
             for c in d[d.max_row]:
                 c.fill = fill

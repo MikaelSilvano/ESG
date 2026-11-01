@@ -79,7 +79,7 @@ def test_template(tmpl):
 def test_gri2016_report(tmp_path, tmpl):
     wb, ws, t = tmpl
     pdf = tmp_path / "2020.pdf"
-    make_pdf(pdf, [("102-1", "Nama organisasi", "12"), ("102-3", "Lokasi kantor pusat", ""),
+    make_pdf(pdf, [("102-1", "Nama organisasi", "12"), ("102-3", "Lokasi kantor pusat", "-"),
                    ("102-7", "Skala organisasi", "20, 21"), ("305-1", "Emisi langsung", "45"),
                    ("305-6", "Emisi ODS", "Tidak relevan")],
              body_pages=["Informasi karyawan (102-8) jumlah karyawan tetap dan kontrak."])
@@ -105,3 +105,34 @@ def test_gri2021_report_group_scoring(tmp_path, tmpl):
     assert ws.cell(1, 10).value == "ABCD"
     assert ws.cell(5, 13).value == 1
     assert ws.cell(t.average_row, 10).value.startswith("=AVERAGE(AVERAGE(J5:J6)")
+
+
+def test_index_without_page_but_number_in_body(tmp_path, tmpl):
+    """Di indeks tanpa halaman, tetapi nomor item tertulis di isi laporan -> 1.
+    Topik dibahas tanpa menuliskan nomor item -> 0."""
+    wb, ws, t = tmpl
+    pdf = tmp_path / "2021.pdf"
+    make_pdf(pdf, [("102-1", "Nama organisasi", "-"), ("102-3", "Lokasi kantor pusat", "-"),
+                   ("102-7", "Skala organisasi", "20"), ("102-8", "Karyawan", "21"),
+                   ("305-1", "Emisi langsung", "45")],
+             body_pages=["Profil perusahaan 102-1: PT Contoh Tbk. Kantor pusat kami berada di Jakarta."])
+    an = DocumentAnalyzer(read_pdf(pdf))
+    res = {r.row: r.score for r in score_document(an, t, 2021)}
+    assert res[5] == 1   # 102-1: nomor item tertulis di isi laporan
+    assert res[6] == 0   # 102-3: hanya dibahas ("kantor pusat") tanpa nomor item
+
+
+def test_chapter_code_list_not_counted_and_text_location(tmp_path, tmpl):
+    """Daftar kode di pembuka bab ("GRI ▶ 305-1, 305-6, 102-3") tidak dihitung sebagai penjelasan;
+    lokasi berupa teks ("Appendix") di kolom halaman indeks dihitung sebagai rujukan lokasi."""
+    wb, ws, t = tmpl
+    pdf = tmp_path / "2020.pdf"
+    make_pdf(pdf, [("102-1", "Nama organisasi", "Appendix"), ("102-3", "Lokasi kantor pusat", "-"),
+                   ("102-7", "Skala organisasi", "20"), ("102-8", "Karyawan", "21"),
+                   ("305-1", "Emisi langsung", "-")],
+             body_pages=["KINERJA LINGKUNGAN GRI > 305-1, 305-6, 102-3 Global Compact Principle 7"])
+    an = DocumentAnalyzer(read_pdf(pdf))
+    res = {r.row: r.score for r in score_document(an, t, 2020)}
+    assert res[5] == 1    # 102-1: lokasi "Appendix"
+    assert res[6] == 0    # 102-3: hanya di daftar kode pembuka bab
+    assert res[10] == 0   # 305-1: idem

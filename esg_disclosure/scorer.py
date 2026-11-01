@@ -14,9 +14,8 @@ import math
 
 from .body_tags import find_body_tags
 from .codes import is_gen2021, parent_code
-from .gri_index import GriIndex, _index_layout, parse_gri_index
+from .gri_index import GriIndex, _code_tokens, _index_layout, parse_gri_index
 from .pdf_reader import Document
-from .semantic import SemanticMatcher
 from .template import Template, TemplateRow
 
 GRI2021_FIRST_YEAR = 2022
@@ -29,7 +28,6 @@ class CodeEvidence:
     index_listed: bool = False
     tag_pages: list[int] = field(default_factory=list)
     ml_prob: float | None = None
-    ml_page: int = 0
     features: list[float] = field(default_factory=list)
 
     @property
@@ -45,6 +43,7 @@ class RowResult:
     score: int
     source: str
     evidence: CodeEvidence | None = None
+    ml_disagrees: bool = False
 
 
 class DocumentAnalyzer:
@@ -53,10 +52,16 @@ class DocumentAnalyzer:
     def __init__(self, doc: Document, model=None, ml_threshold: float = 0.5):
         self.doc = doc
         self.index: GriIndex = parse_gri_index(doc)
+        # halaman tabel daftar kode (indeks GRI, tabel pemetaan SDGs/POJK) bukan "isi laporan"
         table_pages = {p.number for p in doc.pages if _index_layout(p)[0]}
         self.skip_pages = set(self.index.pages) | table_pages
+        # sambungan tabel indeks (halaman berikutnya yang masih memuat kode, mis. baris terakhir indeks)
+        for n in sorted(self.index.pages):
+            nxt = n + 1
+            while nxt <= doc.page_count and nxt not in self.skip_pages and _code_tokens(doc.pages[nxt - 1]):
+                self.skip_pages.add(nxt)
+                nxt += 1
         self.tags = find_body_tags(doc, self.skip_pages)
-        self.semantic = SemanticMatcher(doc, self.skip_pages)
         self.model = model
         self.ml_threshold = ml_threshold
         self._cache: dict[str, CodeEvidence] = {}
@@ -70,55 +75,47 @@ class DocumentAnalyzer:
     def n_codes_2016(self) -> int:
         return sum(1 for c in self.index.codes() if c.startswith("102-") and self.index.has_location(c))
 
-    def evidence(self, code: str, titles: list[str]) -> CodeEvidence:
+    def evidence(self, code: str) -> CodeEvidence:
         if code in self._cache:
             return self._cache[code]
         ev = CodeEvidence(code)
         ev.index_listed = self.index.listed(code)
         ev.index_location = self.index.location(code)
         ev.tag_pages = self.tags.get(code, [])
-        sf = self.semantic.features(code, titles)
-        ev.ml_page = sf.best_page
-        ev.features = feature_vector(ev, sf.max_sim, sf.top3_sim, sf.kw_cover)
+        ev.features = feature_vector(ev)
         if self.model is not None:
             ev.ml_prob = float(self.model.predict_proba([ev.features])[0][1])
-        else:
-            # tanpa model terlatih: ambang konservatif (hanya bila sangat mirip)
-            ev.ml_prob = 1.0 if (sf.max_sim >= 0.30 and sf.kw_cover >= 0.75) else 0.0
         self._cache[code] = ev
         return ev
 
-    def disclosed(self, code: str, titles: list[str]) -> tuple[int, str, CodeEvidence]:
-        ev = self.evidence(code, titles)
+    def disclosed(self, code: str, titles: list[str] | None = None) -> tuple[int, str, CodeEvidence]:
+        """Aturan skripsi (hanya berdasarkan NOMOR item):
+        1 = ada halaman/lokasi di tabel indeks GRI, ATAU nomor item tertulis di isi laporan;
+        0 = selain itu (termasuk: tercantum di indeks tetapi kolom halamannya kosong / "-")."""
+        ev = self.evidence(code)
         if ev.index_location:
             return 1, f"Indeks GRI hal. {ev.index_location}", ev
+        pages = ", ".join(map(str, ev.tag_pages[:8]))
+        if ev.tag_pages and ev.index_listed:
+            return 1, f"Di indeks tanpa halaman, tetapi nomor item tertulis di laporan hal. PDF {pages}", ev
         if ev.tag_pages:
-            return 1, f"Penjelasan bertanda kode di hal. PDF {', '.join(map(str, ev.tag_pages[:8]))}", ev
-        if ev.ml_prob is not None and ev.ml_prob >= self.ml_threshold:
-            return 1, f"ML: penjelasan terdeteksi (p={ev.ml_prob:.2f}) hal. PDF {ev.ml_page} - mohon dicek", ev
-        hint = self.semantic.keyword_pages(code)
-        note = ""
-        if hint:
-            kw, pages = hint
-            note = f" | CEK MANUAL: kata kunci '{kw}' muncul di hal. PDF {', '.join(map(str, pages[:5]))}"
+            return 1, f"Nomor item tertulis di laporan hal. PDF {pages}", ev
         if ev.index_listed:
-            return 0, "Tercantum di indeks tanpa rujukan halaman" + note, ev
-        return 0, "Tidak ditemukan" + note, ev
+            loc = self.index.raw_location(code)
+            what = f'dengan isi kolom "{loc}" (bukan rujukan halaman/lokasi)' if loc else "tanpa halaman/lokasi"
+            return 0, f"Tercantum di indeks GRI {what} & nomor item tidak tertulis di laporan", ev
+        return 0, "Nomor item tidak ditemukan", ev
 
 
-def feature_vector(ev: CodeEvidence, max_sim: float, top3: float, cover: float) -> list[float]:
+def feature_vector(ev: CodeEvidence) -> list[float]:
     return [
         1.0 if ev.index_location else 0.0,
         1.0 if (ev.index_listed and not ev.index_location) else 0.0,
         math.log1p(len(ev.tag_pages)),
-        max_sim,
-        top3,
-        cover,
     ]
 
 
-FEATURE_NAMES = ["indeks_ada_halaman", "indeks_tanpa_halaman", "log_halaman_bertanda",
-                 "tfidf_maks", "tfidf_top3", "cakupan_kata_kunci"]
+FEATURE_NAMES = ["indeks_ada_halaman", "indeks_tanpa_halaman", "log_halaman_bernomor_item"]
 
 
 def _titles(r: TemplateRow) -> list[str]:
@@ -170,6 +167,10 @@ def score_document(an: DocumentAnalyzer, template: Template, year: int) -> list[
         else:
             s, src, ev = an.disclosed(r.code2021, _titles(r))
             results.append(RowResult(r.row, item, r.code2021, s, src, ev))
+    if an.model is not None:
+        for r in results:
+            if r.evidence is not None and r.evidence.ml_prob is not None:
+                r.ml_disagrees = (r.evidence.ml_prob >= an.ml_threshold) != bool(r.score)
     return results
 
 
