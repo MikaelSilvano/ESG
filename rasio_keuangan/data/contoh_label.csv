@@ -1,0 +1,76 @@
+label,kategori
+Pinjaman bank,utang_berbunga
+Pinjaman bank jangka pendek,utang_berbunga
+Pinjaman bank jangka panjang,utang_berbunga
+Utang bank,utang_berbunga
+Utang bank jangka pendek,utang_berbunga
+Utang bank jangka panjang,utang_berbunga
+Utang bank dan lembaga keuangan jangka panjang,utang_berbunga
+Pinjaman jangka pendek,utang_berbunga
+Pinjaman jangka panjang,utang_berbunga
+Pinjaman jangka panjang pihak ketiga,utang_berbunga
+Pinjaman sindikasi,utang_berbunga
+Pinjaman lain-lain,utang_berbunga
+Pinjaman yang dapat dikonversikan,utang_berbunga
+Utang sewa pembiayaan,utang_berbunga
+Liabilitas sewa,utang_berbunga
+Liabilitas sewa pembiayaan,utang_berbunga
+Utang obligasi,utang_berbunga
+Utang obligasi bersih,utang_berbunga
+Obligasi,utang_berbunga
+Senior Notes,utang_berbunga
+Wesel bayar,utang_berbunga
+Medium Term Notes,utang_berbunga
+Utang sukuk,utang_berbunga
+Sukuk Mudharabah,utang_berbunga
+Sukuk Ijarah,utang_berbunga
+Utang jangka panjang,utang_berbunga
+Utang pembiayaan konsumen,utang_berbunga
+Utang lain-lain pihak ketiga jangka panjang,utang_berbunga
+Bank loans,utang_berbunga
+Short-term loans,utang_berbunga
+Long-term loans,utang_berbunga
+Lease liabilities,utang_berbunga
+Bonds payable,utang_berbunga
+Other borrowings,utang_berbunga
+Long-term debt,utang_berbunga
+Utang usaha,bukan_utang_berbunga
+Utang usaha pihak ketiga,bukan_utang_berbunga
+Utang usaha pihak berelasi,bukan_utang_berbunga
+Utang pajak,bukan_utang_berbunga
+Pajak penghasilan badan,bukan_utang_berbunga
+Pajak lain-lain,bukan_utang_berbunga
+Pendapatan diterima di muka,bukan_utang_berbunga
+Pendapatan ditangguhkan,bukan_utang_berbunga
+Uang muka pelanggan,bukan_utang_berbunga
+Uang muka dari pihak ketiga,bukan_utang_berbunga
+Utang pihak berelasi,bukan_utang_berbunga
+Utang lain-lain pihak berelasi,bukan_utang_berbunga
+Pinjaman jangka panjang pihak berelasi,bukan_utang_berbunga
+Liabilitas pajak tangguhan,bukan_utang_berbunga
+Liabilitas imbalan pascakerja,bukan_utang_berbunga
+Liabilitas imbalan kerja,bukan_utang_berbunga
+Liabilitas imbalan kerja jangka pendek,bukan_utang_berbunga
+Penyisihan imbalan karyawan,bukan_utang_berbunga
+Beban akrual,bukan_utang_berbunga
+Beban masih harus dibayar,bukan_utang_berbunga
+Beban yang masih harus dibayar,bukan_utang_berbunga
+Liabilitas derivatif,bukan_utang_berbunga
+Penyisihan untuk rehabilitasi tambang,bukan_utang_berbunga
+Provisi rehabilitasi tambang,bukan_utang_berbunga
+Liabilitas kontrak,bukan_utang_berbunga
+Utang dividen,bukan_utang_berbunga
+Liabilitas jangka pendek lainnya,bukan_utang_berbunga
+Liabilitas jangka panjang lainnya,bukan_utang_berbunga
+Liabilitas lain-lain,bukan_utang_berbunga
+Trade payables,bukan_utang_berbunga
+Taxes payable,bukan_utang_berbunga
+Accrued expenses,bukan_utang_berbunga
+Deferred tax liabilities,bukan_utang_berbunga
+Employee benefits liability,bukan_utang_berbunga
+Unearned revenue,bukan_utang_berbunga
+Advances from customers,bukan_utang_berbunga
+Due to related parties,bukan_utang_berbunga
+Utang aset hak guna,utang_berbunga
+Liabilitas aset hak guna,utang_berbunga
+Right-of-use liabilities,utang_berbunga
