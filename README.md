@@ -1,10 +1,16 @@
-# Penilai Skor ESG Disclosure Otomatis
+# Alat Bantu Data Skripsi: ESG Disclosure & Rasio Keuangan
 
-Program ini **membaca Laporan Keberlanjutan (PDF)** setiap perusahaan, lalu **mengisi poin 0/1**
-untuk setiap item GRI Standards di sheet **ESGD** pada Excel **DATA SKRIPSI**, persis seperti
-contoh perusahaan **DEWA**. Skor ESG Disclosure tiap tahun langsung terhitung oleh rumus di Excel.
+Proyek ini berisi **dua program** yang bekerja dari file PDF:
 
-Bisa dipakai untuk **perusahaan mana pun**: cukup tambahkan folder baru berisi PDF laporannya.
+| Program | Membaca | Mengisi | Perintah |
+|---|---|---|---|
+| **A. Skor ESG Disclosure** (folder `esg_disclosure/`) | Laporan Keberlanjutan | sheet **ESGD** di *DATA SKRIPSI.xlsx* | `python3 esg.py ...` |
+| **B. Rasio Keuangan** (folder `rasio_keuangan/`) | Laporan Tahunan (laporan keuangan auditan) | sheet **CoD** & **Vab. X** di *RATIO DATA SKRIPSI.xlsx* | `python3 rasio.py ...` |
+
+Keduanya mengikuti contoh perusahaan **DEWA** yang sudah diisi manual, dan bisa dipakai untuk
+**perusahaan mana pun**: cukup tambahkan folder baru berisi PDF laporannya.
+
+Bagian 1–10 menjelaskan program A. Program B dijelaskan di [bagian 11](#11-program-b-rasio-keuangan-cost-of-debt--vab-x).
 
 ---
 
@@ -19,6 +25,7 @@ Bisa dipakai untuk **perusahaan mana pun**: cukup tambahkan folder baru berisi P
 8. [Menambah perusahaan lain](#8-menambah-perusahaan-lain)
 9. [Melatih ulang & menguji model](#9-melatih-ulang--menguji-model)
 10. [Masalah yang sering terjadi](#10-masalah-yang-sering-terjadi)
+11. [Program B: Rasio Keuangan (Cost of Debt & Vab. X)](#11-program-b-rasio-keuangan-cost-of-debt--vab-x)
 
 ---
 
@@ -101,6 +108,8 @@ ESG/                              <- folder program ini
 ├── esg.py
 ├── SKRIPSI/
 │   ├── DATA SKRIPSI.xlsx         <- Excel dengan sheet "ESGD"
+│   ├── RATIO DATA SKRIPSI.xlsx   <- Excel dengan sheet "CoD", "Vab. X", "kurs" (program B)
+│   ├── LAPORAN TAHUNAN/          <- PDF laporan tahunan (program B), susunan sama: KODE/tahun.pdf
 │   └── LAPORAN KEBERLANJUTAN/
 │       ├── DEWA/  2020.pdf  2021.pdf  2022.pdf  2023.pdf  2024.pdf
 │       ├── DOID/  2020.pdf  2021.pdf  ...
@@ -298,6 +307,122 @@ bisa dipakai juga sebagai data latih: `python3 esg.py latih --perusahaan DEWA IT
 
 ---
 
+## 11. Program B: Rasio Keuangan (Cost of Debt & Vab. X)
+
+Program ini membaca **laporan posisi keuangan (neraca)** dan **laporan laba rugi** konsolidasian di
+dalam laporan tahunan, lalu mengisi sheet **CoD** dan **Vab. X** pada *RATIO DATA SKRIPSI.xlsx*.
+
+### 11.1 Hasil saat ini
+
+| File | Isi |
+|---|---|
+| `hasil/RATIO DATA SKRIPSI - HASIL.xlsx` | Excel RATIO DATA SKRIPSI dengan sheet CoD & Vab. X terisi untuk DOID, DSSA, ELSA, INDY, ITMG (DEWA tetap seperti aslinya) |
+| `hasil/BUKTI RASIO - RATIO DATA SKRIPSI.xlsx` | Bukti setiap angka: laporan tahunan sumber, halaman PDF, nama pos di laporan; rincian pos utang berbunga yang masuk/tidak masuk; daftar yang perlu dicek |
+
+**Cost of Debt (CoD)** = Beban keuangan ÷ rata-rata utang berbunga (tahun t dan t-1)
+
+| | 2021 | 2022 | 2023 | 2024 | 2025 |
+|---|---|---|---|---|---|
+| DOID | 8,27% | 7,44% | 8,25% | 9,37% | 8,67% |
+| DSSA | 9,84% | 13,15% | 8,31% | 6,02% | 5,28% |
+| ELSA | 8,41% | 11,30% | 8,70% | 10,38% | 10,72% |
+| INDY | 6,65% | 8,11% | 7,82% | 8,45% | 6,46% |
+| ITMG | 4,61% | 6,59% | 5,62% | 6,43% | 13,82% |
+
+Tahun mengikuti contoh DEWA: **Vab. X 2020–2024** dan **CoD 2021–2025**.
+
+### 11.2 Menjalankan
+
+Taruh PDF di `SKRIPSI/LAPORAN TAHUNAN/<KODE>/<tahun>.pdf` dan Excel di `SKRIPSI/RATIO DATA SKRIPSI.xlsx`, lalu:
+
+```bash
+python3 rasio.py isi
+```
+
+| Kebutuhan | Perintah |
+|---|---|
+| Hanya perusahaan tertentu | `python3 rasio.py isi --perusahaan DOID ITMG` |
+| Isi ulang perusahaan yang sudah ada | `python3 rasio.py isi --perusahaan ITMG --timpa` |
+| Lokasi berbeda | `python3 rasio.py isi --laporan "D:/SKRIPSI/LAPORAN TAHUNAN" --excel "D:/SKRIPSI/RATIO DATA SKRIPSI.xlsx"` |
+| Melatih ulang model ML dari contoh DEWA | `python3 rasio.py latih` |
+| Membandingkan hasil program dengan contoh DEWA | `python3 rasio.py uji` |
+
+### 11.3 Data yang diambil & aturannya
+
+| Kolom | Diambil dari laporan | Keterangan |
+|---|---|---|
+| Total Asset | Jumlah aset | |
+| Total Asset (ribuan Rupiah) | rumus Excel | dikonversi memakai sheet **kurs** (USD → Rp) dan satuan (ribuan/jutaan) |
+| Sales | Pendapatan / pendapatan usaha / pendapatan bersih | |
+| Net Income | Laba (rugi) tahun berjalan | sebelum penghasilan komprehensif lain, termasuk kepentingan nonpengendali |
+| Total Equity | Jumlah ekuitas | termasuk kepentingan nonpengendali |
+| EBIT | **Laba usaha** bila disajikan; bila tidak, **laba bruto** | sama seperti contoh DEWA (2020–2023 laba usaha, 2024 laba bruto) |
+| Interest Expense | Beban keuangan / beban bunga / finance cost | |
+| Satuan Nominal (kolom O) | judul laporan ("Disajikan dalam …") | mis. *dolar AS*, *ribuan dolar AS*, *jutaan Rupiah* |
+| Catatan (kolom P / H) | — | sumber laporan, definisi EBIT, konversi, pos utang yang dijumlahkan |
+
+**Utang berbunga (CoD)** dijumlahkan dari pos-pos neraca (rumus `=a+b+c` seperti contoh DEWA):
+
+- **Masuk:** pinjaman/utang bank (jangka pendek & panjang, termasuk bagian jatuh tempo satu tahun),
+  utang sewa pembiayaan, liabilitas sewa / utang aset hak guna, obligasi, *notes*, sukuk, MTN,
+  utang jangka panjang, pinjaman lain-lain, dan **utang lain-lain pihak ketiga yang berada di
+  liabilitas jangka panjang atau bagian jatuh tempo satu tahun** (seperti DEWA).
+- **Tidak masuk:** utang usaha, utang pajak, pendapatan diterima di muka/ditangguhkan, uang muka
+  pelanggan, utang/pinjaman pihak berelasi, liabilitas pajak tangguhan, imbalan kerja/pascakerja,
+  beban akrual, provisi, derivatif, liabilitas lainnya, utang lain-lain operasional di liabilitas
+  jangka pendek.
+
+**Ikuti data terbaru:** nilai tahun Y diambil dari **angka komparatif laporan tahun Y+1** bila ada
+(karena bisa memuat koreksi), kalau tidak dari laporan tahun Y. Utang t-1 pada CoD tahun t diambil
+dari kolom komparatif laporan tahun t.
+
+**Satuan & mata uang:** dalam satu perusahaan semua angka diseragamkan ke satuan laporan terbaru;
+bila ada perbedaan (seperti DEWA: dolar AS → ribuan Rupiah), program mengonversi otomatis
+(memakai sheet *kurs*) dan menulis catatan. Kelima perusahaan ini satuannya sudah sama setiap tahun.
+
+### 11.4 Cara kerja & Machine Learning
+
+```
+PDF ──► 1. Cari halaman neraca & laba rugi konsolidasian (bagian laporan keuangan auditan)
+     ──► 2. Baca setiap baris: nama pos + angka tahun berjalan + angka tahun lalu (posisi kolom)
+     ──► 3. Tentukan pos neraca: aset / liabilitas jangka pendek / jangka panjang / ekuitas
+     ──► 4. Klasifikasi pos liabilitas: utang berbunga atau bukan (aturan + model ML)
+     ──► 5. Pilih data terbaru, seragamkan satuan ──► isi Excel + file bukti
+```
+
+- **Model ML** (TF-IDF + Logistic Regression) dilatih dari contoh label (`rasio_keuangan/data/contoh_label.csv`)
+  dan dari **pos-pos neraca DEWA yang dipakai di rumus contoh CoD** (`python3 rasio.py latih`).
+  Model dipakai untuk pos liabilitas yang namanya tidak dikenali aturan; keputusan ML selalu dicatat
+  di sheet *CEK MANUAL* file bukti.
+- **Pemeriksaan otomatis:** untuk setiap laporan, jumlah semua pos liabilitas yang terbaca harus sama
+  dengan "Jumlah liabilitas", dan total aset = total liabilitas + total ekuitas. Seluruh 36 laporan
+  (6 perusahaan × 6 tahun) lolos kedua pemeriksaan ini.
+
+### 11.5 Hasil uji terhadap contoh DEWA
+
+`python3 rasio.py uji` membandingkan hasil program dengan isi manual DEWA: **29 dari 36 angka sama**.
+Perbedaannya bukan salah baca program, melainkan:
+
+| Bagian | Contoh DEWA | Program | Penyebab |
+|---|---|---|---|
+| Vab. X 2021 (aset, laba, ekuitas, EBIT) & utang 2021 | dari LT 2021 | dari LT 2022 (komparatif) | aturan "ikuti data terbaru"; LT 2022 menyajikan kembali angka 2021 |
+| Utang berbunga 2023 | 1.555.419.659 | 1.410.840.712 | contoh ikut menjumlahkan *liabilitas imbalan pascakerja* 144.578.947 (seharusnya tidak masuk) |
+| Utang berbunga 2024 | 2.528.428.564 | 2.555.428.564 | salah ketik di contoh: 103.045.040, di laporan 130.045.040 |
+
+Blok DEWA di Excel hasil **tidak diubah**; silakan koreksi manual bila setuju.
+
+### 11.6 Hal yang perlu Anda ketahui
+
+- **EBIT:** DSSA menyajikan *laba usaha* → EBIT = laba usaha. DOID, ELSA, INDY, ITMG tidak menyajikan
+  laba usaha → EBIT = laba bruto. Tertulis di kolom Catatan.
+- **INDY 2020** memakai angka yang disajikan kembali di LT 2021 (operasi yang dihentikan), sehingga
+  pendapatan 2020 = 1.813.826.560 (bukan 2.077.212.345 seperti di LT 2020).
+- **DSSA 2022** memakai angka yang disajikan kembali di LT 2023 (total aset 6.497.181.277).
+- Utang lain-lain pihak ketiga yang berada di **liabilitas jangka pendek biasa** (DOID, DSSA, INDY) dianggap
+  utang operasional (tidak berbunga). Bila menurut Anda harus masuk, ubah aturan di
+  `rasio_keuangan/classify.py` lalu jalankan ulang.
+- Pinjaman dari **pihak berelasi** (INDY) tidak dimasukkan sesuai aturan "utang pihak berelasi tidak termasuk".
+
 ## Struktur kode
 
 ```
@@ -311,6 +436,18 @@ esg_disclosure/
   scorer.py                 <- aturan penilaian 0/1 & skor
   template.py               <- membaca struktur sheet ESGD
   excel_writer.py           <- menulis blok perusahaan ke Excel (format seperti DEWA)
-model/model_esg.joblib      <- model ML terlatih
+model/model_esg.joblib      <- model ML terlatih (program A)
+rasio.py                    <- program rasio keuangan (python3 rasio.py ...)
+rasio_keuangan/
+  cli.py                    <- perintah isi / latih / uji
+  locate.py                 <- mencari halaman neraca & laba rugi
+  parser.py                 <- membaca baris tabel laporan keuangan (label + angka)
+  extract.py                <- mengambil total aset, pendapatan, laba, ekuitas, EBIT, beban keuangan, pos liabilitas
+  classify.py               <- aturan + model ML utang berbunga
+  dataset.py                <- aturan "data terbaru" & penyeragaman satuan/kurs
+  units.py                  <- deteksi satuan (dolar AS, ribuan/jutaan Rupiah, ...)
+  excel.py                  <- menulis sheet CoD & Vab. X
+  data/contoh_label.csv     <- contoh label pos utang berbunga / bukan (boleh ditambah)
+model/model_utang_berbunga.joblib <- model ML utang berbunga (program B)
 tests/                      <- tes otomatis (python3 -m pytest)
 ```
