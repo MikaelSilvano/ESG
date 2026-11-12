@@ -47,9 +47,11 @@ class Row:
         if not lab:
             return self.context[-1] if self.context else self.label_en
         parts = [lab]
-        cont = lambda t: bool(t) and (t[0].islower() or t[0] in "-–(" or bool(re.match(r"^(pihak|third|related)", t, re.I)))
+        cont = lambda t: bool(t) and (t[0].islower() or t[0] in "-–(" or bool(re.match(r"^(pihak|third|related|dikurangi|setelah|net\s+of|less\b|yang\s|jatuh|tempo|dalam\s+waktu)", t, re.I)))
+        # baris judul di atasnya yang kalimatnya belum selesai (berakhir dengan kata sambung / tanda hubung)
+        open_end = lambda t: bool(re.search(r"(\b(yang|dan|dikurangi|jatuh|dalam|atas|dari|pada|dengan|setelah|bagian|oleh|and|of|net|the|from|due)|[-–/,])\s*$", t.strip(), re.I))
         i = len(self.context) - 1
-        while cont(parts[0]) and i >= 0:
+        while i >= 0 and (cont(parts[0]) or open_end(self.context[i])):
             parts.insert(0, self.context[i])
             i -= 1
         return " ".join(parts)
@@ -144,15 +146,21 @@ SUB_CM = re.compile(r"(jatuh\s+tempo\s+dalam\s+(waktu\s+)?satu\s+tahun|current\s
 SUB_NET = re.compile(r"(setelah\s+dikurangi|net\s+of\s+current)", re.I)
 
 
-def parse_pages(doc: pymupdf.Document, pages: list[int]) -> list[Row]:
+def parse_pages(doc: pymupdf.Document, pages: list, clip: tuple[float, float] | None = None) -> list[Row]:
+    """pages: nomor halaman, atau (nomor halaman, (x0, x1)) untuk setengah halaman."""
     out: list[Row] = []
     section, sub = "", ""
     cl_closed = False   # sudah melewati "Jumlah liabilitas jangka pendek"
     last_ctx: list[str] = []
-    for pno in pages:
+    for item in pages:
+        pno, clip_i = item if isinstance(item, tuple) else (item, clip)
         page = doc[pno - 1]
         width = page.rect.width
         words = _words(page)
+        if clip_i is not None:   # halaman berisi dua laporan berdampingan: ambil satu sisi
+            words = [w for w in words if clip_i[0] <= w.x0 < clip_i[1]]
+            width = clip_i[1] - clip_i[0]
+            words = [Word(w.x0 - clip_i[0], w.y0, w.x1 - clip_i[0], w.y1, w.text) for w in words]
         cols = _columns(words, width)
         if len(cols) < 2:
             continue

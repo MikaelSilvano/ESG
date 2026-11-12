@@ -31,12 +31,15 @@ Bagian 1–10 menjelaskan program A. Program B dijelaskan di [bagian 11](#11-pro
 
 ## 1. Status hasil saat ini
 
-Seluruh **25 laporan** (DOID, DSSA, ELSA, INDY, ITMG × 2020–2024) sudah dinilai. File hasil ada di folder [`hasil/`](hasil):
+Seluruh **70 laporan** (DOID, DSSA, ELSA, INDY, ITMG, PTRO, WINS, BRMS, BRPT, INRU, INTP, MDKA, SMCB, GGRP × 2020–2024) sudah dinilai.
+File hasil ada di folder [`hasil/`](hasil):
 
 | File | Isi |
 |---|---|
-| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk kelima perusahaan (DEWA tetap seperti aslinya) |
+| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk 14 perusahaan (DEWA tetap seperti aslinya, nilai dikoreksi) |
 | `hasil/BUKTI PENILAIAN - DATA SKRIPSI.xlsx` | Ringkasan skor + alasan/bukti setiap poin (halaman PDF) |
+| `screening/Screening_Dataset_ESG.xlsx` | Penyaringan 94 emiten (syarat: SR 2020–2024 ber-GRI, laporan tahunan 2020–2025) beserta bukti per dokumen |
+| `screening/tautan_laporan_9_emiten.csv` | Tautan resmi 99 PDF (SR & laporan tahunan) 9 emiten yang lolos penyaringan |
 
 **Skor ESG Disclosure**
 
@@ -45,21 +48,33 @@ Seluruh **25 laporan** (DOID, DSSA, ELSA, INDY, ITMG × 2020–2024) sudah dinil
 | DEWA (manual, dikoreksi) | 0,6849 | 0,5391 | 0,7500 | 0,7812 | 0,7812 |
 | DOID | 0,3278 | 0,3490 | 0,8229 | 0,8854 | 0,8646 |
 | DSSA | 0,3490 | 0,3490 | 0,6250 | 0,6458 | 0,7188 |
-| ELSA | 0,3125 | 0,4062 | 0,3958 | 0,7812 | 0,7812 |
+| ELSA | 0,3125 | 0,4062 | 0,3854 | 0,7812 | 0,7812 |
 | INDY | 0,2757 | 0,8646 | 0,9062 | 0,8542 | 0,9167 |
 | ITMG | 0,7448 | 0,7188 | 0,8750 | 1,0000 | 1,0000 |
+| PTRO | 0,6510 | 0,6042 | 0,7708 | 0,8542 | 0,8542 |
+| WINS | 0,3203 | 0,3125 | 0,6146 | 0,6354 | 0,6458 |
+| BRMS | 0,5156 | 0,5807 | 0,7708 | 0,7708 | 0,8333 |
+| BRPT | 0,2101 | 0,2205 | 0,4375 | 0,4375 | 0,4271 |
+| INRU | 0,2552 | 0,2552 | 0,6771 | 0,6562 | 0,8542 |
+| INTP | 0,4010 | 0,7188 | 0,7292 | 0,8021 | 0,8229 |
+| MDKA | 0,3281 | 0,4740 | 0,7604 | 0,8750 | 0,8333 |
+| SMCB | 0,3229 | 0,4271 | 0,6146 | 0,8125 | 0,9479 |
+| GGRP | 0,1771 | 0,2396 | 0,3854 | 0,6250 | 0,6562 |
 
 **Akurasi terhadap penilaian manual DEWA (5 tahun, setelah koreksi): 590 dari 590 baris sama (100%).**
 Empat nilai manual DEWA dikoreksi sesuai aturan (sudah dikonfirmasi): 2020 item 405-1 → 1 (indeks
 hal. 149–150); 2021 item 405-1 → 0; 2022 item 410-1 dan 411-1 → 0 (nomor item tidak tertulis di laporan).
 Di file hasil, blok DEWA memakai nilai yang sudah dikoreksi ini.
 
+**Perubahan pada ELSA 2022 (0,3958 → 0,3854):** program kini membagi baris indeks ke kode terdekat, sehingga halaman satu
+baris tidak lagi "bocor" ke baris di bawahnya (sebelumnya item 2-20 ikut mendapat halaman milik 2-22). Skor lain tidak berubah.
+
 **Hal yang perlu Anda ketahui sebelum memakai hasil:**
 - Penilaian **hanya berdasarkan nomor item** (2-1, 102-1, 305-1, dst.). Pembahasan topik tanpa
   menuliskan nomor itemnya **tidak** dihitung.
 - Item yang **tercantum di indeks GRI tetapi kolom halamannya kosong/"-"** diberi **0**, kecuali
   nomor item itu tertulis di bagian lain laporan (baris ini ditandai oranye di file bukti).
-- Kolom halaman/lokasi boleh berisi **angka halaman** atau **lokasi tertulis** (mis. "Appendix",
+- Kolom halaman/lokasi boleh berisi **angka halaman** (juga yang ditulis dalam kurung, mis. "[22]") atau **lokasi tertulis** (mis. "Appendix",
   "Lampiran", "Laporan Tahunan", alamat website) → poin 1. Contoh: INDY 2023 item 405-2 ("Appendix").
 - **Daftar nomor item di pembuka bab** (mis. INDY 2020: "GRI ▶ 301-1, 302-1, 302-2, …") **tidak**
   dihitung, karena hanya judul/daftar isi bab tanpa penjelasan.
@@ -68,6 +83,15 @@ Di file hasil, blok DEWA memakai nilai yang sudah dikoreksi ini.
 - **ITMG 2023 dan 2024 bernilai 1,0000** karena seluruh 96 item tercantum lengkap dengan halaman di indeks GRI.
 - Laporan tahun 2020–2021 yang memakai opsi "Core" GRI 2016 hanya mencantumkan sebagian item 102-x
   sehingga skornya lebih rendah (itu sifat laporannya, bukan kesalahan baca).
+- **MDKA 2022**: tabel indeks GRI-nya berupa **gambar** (tanpa teks, OCR tidak akurat), jadi dibaca manual dari
+  halaman PDF 85–87 dan disimpan di `esg_disclosure/overrides/MDKA_2022.json`. Berkas serupa bisa dibuat untuk laporan lain.
+- **SMCB 2020, 2021, 2022, 2024**: "indeks GRI" berbentuk tabel rujukan silang ke SEOJK 16/2021 **tanpa kolom halaman**
+  (hanya kolom "Keterangan"). Menurut aturan di atas, item yang tercantum tanpa halaman diberi 0 kecuali nomor itemnya tertulis di
+  isi laporan, sehingga skor tahun-tahun ini bisa lebih rendah dari kenyataan. **Mohon putuskan apakah tabel jenis ini
+  dianggap memenuhi rujukan** (bila ya, skor SMCB 2020–2022 dan 2024 akan naik).
+- **BRPT 2020–2023** dan **GGRP 2020–2021** hanya memuat 43–49 kode di indeks GRI (opsi "Core" ringkas), jadi skornya rendah.
+- **INRU 2020 dan 2021** kebetulan sama-sama 0,2552 (jumlah poin sama, 38 dari 118 baris, dengan dua baris berbeda yang saling
+  menggantikan); bukan salin-tempel.
 
 ## 2. Persiapan (sekali saja)
 
@@ -303,6 +327,7 @@ bisa dipakai juga sebagai data latih: `python3 esg.py latih --perusahaan DEWA IT
 | `Tabel indeks GRI tidak terdeteksi` | Laporan tanpa indeks GRI; penilaian hanya dari nomor item yang tertulis di laporan – cek manual file bukti |
 | `kemungkinan PDF hasil scan` | PDF berupa gambar, teks tidak bisa dibaca; cari versi PDF lain dari situs perusahaan/BEI |
 | `#DIV/0!` di baris rata-rata | Tahun tersebut belum ada PDF-nya (kolom kosong) |
+| `Indeks GRI berupa gambar` | Tabel indeks tanpa lapisan teks. Program mencoba OCR (perlu program Tesseract + `pip install pytesseract`), tetapi hasilnya kurang akurat; untuk hasil pasti, baca tabelnya lalu simpan di `esg_disclosure/overrides/<KODE>_<tahun>.json` (lihat `MDKA_2022.json` sebagai contoh) |
 | `python3` tidak dikenal (Windows) | Pakai `python` atau `py` sebagai gantinya |
 
 ---
@@ -316,7 +341,7 @@ dalam laporan tahunan, lalu mengisi sheet **CoD** dan **Vab. X** pada *RATIO DAT
 
 | File | Isi |
 |---|---|
-| `hasil/RATIO DATA SKRIPSI - HASIL.xlsx` | Excel RATIO DATA SKRIPSI dengan sheet CoD & Vab. X terisi untuk DOID, DSSA, ELSA, INDY, ITMG (DEWA tetap seperti aslinya) |
+| `hasil/RATIO DATA SKRIPSI - HASIL.xlsx` | Excel RATIO DATA SKRIPSI dengan sheet CoD & Vab. X terisi untuk 14 perusahaan (DEWA tetap seperti aslinya) |
 | `hasil/BUKTI RASIO - RATIO DATA SKRIPSI.xlsx` | Bukti setiap angka: laporan tahunan sumber, halaman PDF, nama pos di laporan; rincian pos utang berbunga yang masuk/tidak masuk; daftar yang perlu dicek |
 
 **Cost of Debt (CoD)** = Beban keuangan ÷ rata-rata utang berbunga (tahun t dan t-1)
@@ -324,12 +349,33 @@ dalam laporan tahunan, lalu mengisi sheet **CoD** dan **Vab. X** pada *RATIO DAT
 | | 2021 | 2022 | 2023 | 2024 | 2025 |
 |---|---|---|---|---|---|
 | DOID | 8,27% | 7,44% | 8,25% | 9,37% | 8,67% |
-| DSSA | 9,84% | 13,15% | 8,31% | 6,02% | 5,28% |
+| DSSA | 9,73% | 13,08% | 8,29% | 6,02% | 5,28% |
 | ELSA | 8,41% | 11,30% | 8,70% | 10,38% | 10,72% |
-| INDY | 6,65% | 8,11% | 7,82% | 8,45% | 6,46% |
+| INDY | 6,65% | 8,08% | 7,79% | 8,44% | 6,44% |
 | ITMG | 4,61% | 6,59% | 5,62% | 6,43% | 13,82% |
+| PTRO | 3,30% | 5,90% | 10,81% | 7,99% | 8,93% |
+| WINS | 5,97% | 6,53% | 7,90% | 6,17% | 6,42% |
+| BRMS | 0,13% | 0,09% | 0,05% | 10,72% | 12,30% |
+| BRPT | 6,12% | 5,74% | 7,82% | 7,85% | 6,73% |
+| INRU | (kosong) | (kosong) | 5,59% | 3,04% | 2,78% |
+| INTP | 8,15% | 6,79% | 3,19% | 6,93% | 6,66% |
+| MDKA | 4,02% | 4,85% | 5,26% | 7,13% | 6,80% |
+| SMCB | 6,67% | 7,42% | 8,44% | 9,51% | 7,94% |
+| GGRP | 4,80% | 6,32% | 4,80% | 6,26% | 8,96% |
 
 Tahun mengikuti contoh DEWA: **Vab. X 2020–2024** dan **CoD 2021–2025**.
+
+**Yang perlu dicek manual (ada di sheet CEK MANUAL pada file bukti):**
+- **INRU 2020–2022**: laporan keuangan di laporan tahunannya berupa **gambar hasil pindaian** (tanpa teks), sehingga Vab. X 2020–2021 dan
+  CoD 2021–2022 dikosongkan. Vab. X 2022 diambil dari kolom komparatif laporan tahunan 2023. Isi manual dari laporan keuangan auditan
+  (IDX), atau jalankan `RASIO_OCR=1 python3 rasio.py isi ...` (OCR, lambat ±6 menit per laporan dan angkanya wajib dicek).
+- **BRMS 2020–2023**: CoD sangat kecil (0,05–0,13%) karena beban bunga yang dilaporkan memang kecil (USD 4,7 ribu–49,8 ribu) dibanding
+  pinjaman; mohon dicek ke catatan atas laporan keuangan apakah bunga dikapitalisasi.
+- **BRPT 2025**: laporan laba rugi tidak menyajikan laba usaha/laba bruto, jadi EBIT dikosongkan.
+- Laporan keuangan **terpisah dari laporan tahunan** dipakai untuk BRMS 2022, MDKA 2024 dan 2025 (file `2022_LK.pdf`, `2024_LK.pdf`,
+  `2025_LK.pdf` di folder perusahaan, sebab laporan tahunannya tidak memuat laporan keuangan).
+- Aturan klasifikasi diperbaiki: "Pinjaman … lainnya" kini tetap utang berbunga, dan "Estimasi biaya pembongkaran/reklamasi" bukan utang
+  berbunga. Akibatnya CoD DSSA 2021–2023 dan INDY 2022–2025 berubah tipis dari versi sebelumnya (tabel di atas sudah yang terbaru).
 
 ### 11.2 Menjalankan
 

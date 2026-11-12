@@ -10,12 +10,14 @@ untuk setiap baris item di sheet ESGD, mengikuti aturan penilaian skripsi:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
 import math
+from pathlib import Path
 
 from .body_tags import find_body_tags
 from .codes import is_gen2021, parent_code
-from .gri_index import GriIndex, _code_tokens, _index_layout, parse_gri_index
-from .pdf_reader import Document
+from .gri_index import INDEX_TITLE_RE, GriIndex, IndexEntry, _code_tokens, _index_layout, parse_gri_index
+from .pdf_reader import Document, ocr_page
 from .template import Template, TemplateRow
 
 GRI2021_FIRST_YEAR = 2022
@@ -46,12 +48,32 @@ class RowResult:
     ml_disagrees: bool = False
 
 
+def _load_override(key: str | None):
+    if not key:
+        return None
+    f = Path(__file__).parent / "overrides" / f"{key}.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else None
+
+
 class DocumentAnalyzer:
     """Mengumpulkan bukti untuk satu laporan (satu perusahaan, satu tahun)."""
 
-    def __init__(self, doc: Document, model=None, ml_threshold: float = 0.5):
+    def __init__(self, doc: Document, model=None, ml_threshold: float = 0.5, key: str | None = None):
         self.doc = doc
-        self.index: GriIndex = parse_gri_index(doc)
+        self.manual_index = False
+        self.ocr_pages: list[int] = []
+        ov = _load_override(key)
+        if ov:   # indeks berupa gambar yang sudah dibaca manual (lihat folder overrides/)
+            self.index = GriIndex()
+            for n in ov["halaman_pdf"]:
+                self.index.pages.append(n)
+            for code, loc in ov["indeks"].items():
+                self.index.add(IndexEntry(code, ov["halaman_pdf"][0], loc, "(dibaca manual dari gambar indeks)", True))
+            self.manual_index = True
+        else:
+            self.index = parse_gri_index(doc)
+            if not self.index.pages:
+                self._try_ocr()
         # halaman tabel daftar kode (indeks GRI, tabel pemetaan SDGs/POJK) bukan "isi laporan"
         table_pages = {p.number for p in doc.pages if _index_layout(p)[0]}
         self.skip_pages = set(self.index.pages) | table_pages
@@ -65,6 +87,25 @@ class DocumentAnalyzer:
         self.model = model
         self.ml_threshold = ml_threshold
         self._cache: dict[str, CodeEvidence] = {}
+
+    def _try_ocr(self, max_pages: int = 24) -> None:
+        """Tabel indeks GRI kadang berupa gambar (tanpa lapisan teks kode). Halaman berjudul
+        "Indeks Isi GRI"/"GRI Content Index" yang tidak memuat kode sebagai teks dibaca dengan OCR
+        (bersama beberapa halaman sesudahnya), lalu indeks dicari lagi."""
+        n = self.doc.page_count
+        seeds = [p for p in self.doc.pages if p.number > n * 0.3 and INDEX_TITLE_RE.search(p.text)
+                 and len(_code_tokens(p)) < 5]
+        cand: list = []
+        for sd in seeds[:3]:
+            cand += [self.doc.pages[i] for i in range(sd.number - 1, min(n, sd.number + 8))]
+        cand = list({p.number: p for p in cand}.values())[:max_pages]
+        if not cand:
+            return
+        done = [p.number for p in cand if ocr_page(p)]
+        if not done:
+            return
+        self.ocr_pages = done
+        self.index = parse_gri_index(self.doc)
 
     # Standar GRI yang dipakai laporan (dilihat dari kode di tabel indeks)
     @property

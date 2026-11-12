@@ -95,12 +95,14 @@ def cmd_isi(a) -> None:
             wv.cell(r, 1).value, wv.cell(r, 2).value = code, y
             for col, v in vals.items():
                 wv[f"{col}{r}"].value = num(v.value) if v else None
-            wv[f"D{r}"].value = total_asset_formula(r, unit, kurs_rows.get(y))
-            wv[f"F{r}"].value = f"=C{r}/E{r}"
-            wv[f"G{r}"].value = f"=LN(D{r})"
-            wv[f"I{r}"].value = f"=H{r}/C{r}"
-            wv[f"K{r}"].value = f"=C{r}/J{r}"
-            wv[f"N{r}"].value = f"=L{r}/M{r}"
+            # rumus hanya ditulis bila angka masukannya ada (hindari #DIV/0! pada tahun yang datanya tidak ditemukan)
+            has = lambda *v: all(x is not None for x in v)
+            wv[f"D{r}"].value = total_asset_formula(r, unit, kurs_rows.get(y)) if ta else None
+            wv[f"F{r}"].value = f"=C{r}/E{r}" if has(ta, sales) else None
+            wv[f"G{r}"].value = f"=LN(D{r})" if ta else None
+            wv[f"I{r}"].value = f"=H{r}/C{r}" if has(ni, ta) else None
+            wv[f"K{r}"].value = f"=C{r}/J{r}" if has(ta, eq) else None
+            wv[f"N{r}"].value = f"=L{r}/M{r}" if has(ebit, ie) else None
             wv[f"O{r}"].value = unit.label
             srcs = sorted({v.source_year for v in vals.values() if v})
             notes = [f"Sumber: LT {', '.join(map(str, srcs))}" + (" (angka komparatif LT tahun berikutnya = data terbaru)" if any(s > y for s in srcs) else "")]
@@ -138,8 +140,13 @@ def cmd_isi(a) -> None:
                 wc[f"C{r}"].value = num(ie.value) if ie else None
             wc[f"D{r}"].value = sum_formula([v for _, v in d_t.lines]) if d_t else None
             wc[f"E{r}"].value = sum_formula([v for _, v in d_p.lines]) if d_p else None
-            wc[f"F{r}"].value = f"=AVERAGE(D{r}:E{r})"
-            wc[f"G{r}"].value = f"=C{r}/F{r}"
+            if d_t and d_p:
+                wc[f"F{r}"].value = f"=AVERAGE(D{r}:E{r})"
+                wc[f"G{r}"].value = f"=C{r}/F{r}"
+            else:   # rata-rata hanya dari satu tahun menyesatkan: dikosongkan, mohon isi manual
+                wc[f"F{r}"].value = None
+                wc[f"G{r}"].value = None
+                ev_check.append((code, y, "CoD", "Tidak dihitung: utang berbunga tahun t atau t-1 tidak ditemukan di laporan yang tersedia"))
             notes = [f"Satuan: {unit.label}"]
             for tag, d in (("Utang t", d_t), ("Utang t-1", d_p)):
                 if d:

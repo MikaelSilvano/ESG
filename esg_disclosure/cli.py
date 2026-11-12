@@ -38,14 +38,25 @@ def _open_template(excel: Path):
     return wb, ws, read_template(ws)
 
 
+def _year(path) -> str:
+    import re
+    m = re.search(r"(?<!\d)((?:19|20)\d{2})(?!\d)", Path(path).stem)
+    return m.group(1) if m else ""
+
+
 def _analyze(paths, model, threshold):
     t0 = time.time()
     doc = load_report(paths)
-    an = DocumentAnalyzer(doc, model=model, ml_threshold=threshold)
+    key = f"{paths[0].parent.name.strip().upper()}_{_year(paths[0])}"
+    an = DocumentAnalyzer(doc, model=model, ml_threshold=threshold, key=key)
     chars = sum(len(p.text.strip()) for p in doc.pages)
     if chars < 200 * max(1, doc.page_count) * 0.2:
         _log("      [!] Teks PDF sangat sedikit - kemungkinan PDF hasil scan (gambar). Hasil bisa tidak akurat.")
-    if not an.index.pages:
+    if an.manual_index:
+        _log("      [i] Indeks GRI berupa gambar: dibaca manual (esg_disclosure/overrides).")
+    elif an.ocr_pages and an.index.pages:
+        _log("      [!] Indeks GRI berupa gambar: dibaca dengan OCR (kurang akurat) - mohon cek manual.")
+    elif not an.index.pages:
         _log("      [!] Tabel indeks GRI tidak terdeteksi - penilaian hanya dari tanda kode & ML.")
     std = "GRI 2021" if an.n_codes_2021 >= an.n_codes_2016 and an.n_codes_2021 else (
         "GRI 2016" if an.n_codes_2016 else "tanpa indeks GRI")

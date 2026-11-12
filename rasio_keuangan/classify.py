@@ -25,8 +25,11 @@ EXCLUDE = re.compile(
     r"(berelasi|related|usaha\b|trade|pajak|\btax|akrual|accrued|masih\s+harus\s+dibayar|imbalan|employee|"
     r"pasca\s*kerja|pensiun|pension|bonus|pendapatan\s+(diterima|ditangguhkan)|unearned|deferred\s+(income|revenue)|"
     r"uang\s+muka|advance|derivatif|derivative|provisi|penyisihan|provision|dividen|dividend|kontrak|contract|"
-    r"dimiliki\s+untuk\s+dijual|held\s+for\s+sale|lainnya\b|other\s+(current|non-?current|long-term|short-term)\s+liabilit|"
-    r"kontinjensi|contingent|tunjangan|hari\s+raya|\bthr\b|jumlah|total|sub\s*jumlah)", re.I)
+    r"dimiliki\s+untuk\s+dijual|held\s+for\s+sale|"
+    r"kontinjensi|contingent|tunjangan|hari\s+raya|\bthr\b|jumlah|total|sub\s*jumlah|"
+    r"pembongkaran|dismantl|decommission|reklamasi|restorasi|rehabilitasi)", re.I)
+# kata yang hanya "lemah": pos "Pinjaman ... lainnya" tetap utang berbunga
+EXCLUDE_WEAK = re.compile(r"(lainnya\b|other\s+(current|non-?current|long-term|short-term)\s+liabilit)", re.I)
 INCLUDE = re.compile(
     r"(pinjaman|\bloans?\b|borrowing|utang\s+bank|bank\s+loan|kredit|\bsewa\b|lease|obligasi|\bbonds?\b|\bnotes\b|"
     r"sukuk|wesel|\bmtn\b|medium\s+term|utang\s+jangka\s+panjang|long-term\s+debt|lembaga\s+keuangan|"
@@ -44,6 +47,8 @@ def rule(row: Row) -> tuple[bool | None, str]:
         return False, "aturan: termasuk daftar bukan utang berbunga"
     if INCLUDE.search(text):
         return True, "aturan: pinjaman/utang bank/sewa/obligasi/notes"
+    if EXCLUDE_WEAK.search(text):
+        return False, "aturan: termasuk daftar bukan utang berbunga"
     return None, ""
 
 

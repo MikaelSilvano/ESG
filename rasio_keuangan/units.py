@@ -19,6 +19,17 @@ class Unit:
 
 
 PATTERNS = [
+    # format ringkas: US$ '000 / USD'000 / Rp'000 / Rp juta / (Dalam USD, kecuali ...) / (In Rupiah, unless ...)
+    (re.compile(r"(us\$|usd)\s*['\u2019`\u2018]?\s*000\s*,\s*000\b|(us\$|usd)\s*juta|(us\$|usd)\s*millions?", re.I), Unit("USD", 1_000_000)),
+    (re.compile(r"(us\$|usd)\s*['\u2019`\u2018]\s*000|(us\$|usd)\s+000\b|dalam\s+ribuan\s+(us\$|usd)|in\s+thousands\s+of\s+(us\$|usd)|"
+                r"\(\s*(dalam|in)\s+(ribuan|thousands?)\s+(us\$|usd)", re.I), Unit("USD", 1000)),
+    (re.compile(r"rp\s*['\u2019`\u2018]\s*000\s*,\s*000|rp\s*juta|in\s+millions?\s+of\s+(rp|rupiah)|dalam\s+jutaan\s+(rp|rupiah)|"
+                r"\(\s*(dalam|in)\s+(jutaan|millions?)\s+rup", re.I), Unit("IDR", 1_000_000)),
+    (re.compile(r"rp\s*['\u2019`\u2018]\s*000\b|dalam\s+ribuan\s+(rp|rupiah)|in\s+thousands\s+of\s+(rp|rupiah)", re.I), Unit("IDR", 1000)),
+    (re.compile(r"\(\s*(dalam|in|expressed\s+in|stated\s+in)\s+(usd|us\$|us\s+dollars?|dolar\s+as|dolar\s+amerika)\b|"
+                r"(dalam|in)\s+(usd|us\$)\s*,?\s*(kecuali|unless|except)", re.I), Unit("USD", 1)),
+    (re.compile(r"\(\s*(dalam|in|expressed\s+in|stated\s+in)\s+(rupiah|rp)\b|(dalam|in)\s+(rupiah|rp)\s*(penuh|full)?\s*,?\s*(kecuali|unless|except)|"
+                r"(rupiah\s+penuh|full\s+rupiah|rupiah\s+full)", re.I), Unit("IDR", 1)),
     (re.compile(r"(ribuan|thousands?\s+of)\s+(dolar|dollar|us\s*dollar|us\$|united\s+states)", re.I), Unit("USD", 1000)),
     (re.compile(r"(jutaan|millions?\s+of)\s+(dolar|dollar|us\$|united\s+states)", re.I), Unit("USD", 1_000_000)),
     (re.compile(r"(jutaan|millions?\s+of)\s+(rupiah|rp)", re.I), Unit("IDR", 1_000_000)),

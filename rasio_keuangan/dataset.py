@@ -43,7 +43,7 @@ class CompanyData:
         self.kurs = kurs
         self.reports: dict[int, ReportFacts] = {}
         for y, paths in sorted(files.items()):
-            self.reports[y] = extract_report(paths[0], y, model)
+            self.reports[y] = extract_report(paths, y, model)
         units = [r.unit for _, r in sorted(self.reports.items()) if r.unit]
         self.unit: Unit | None = units[-1] if units else None   # satuan laporan terbaru
         self.notes: list[str] = []

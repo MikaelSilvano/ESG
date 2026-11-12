@@ -51,7 +51,7 @@ class IndexEntry:
         """Ada rujukan halaman/lokasi: angka halaman, atau lokasi tertulis seperti
         "Appendix/Lampiran", "Laporan Tahunan", alamat website. "-", "N/A", kosong = tidak ada."""
         loc = self.location
-        return (any(PAGE_TOKEN_RE.match(t) for t in loc.split())
+        return (any(PAGE_TOKEN_RE.match(t.strip("[]()")) for t in loc.split() if t.strip("[]()"))
                 or bool(URL_RE.search(loc)) or bool(ANNUAL_REF_RE.search(loc)))
 
     @property
@@ -130,16 +130,57 @@ def _index_layout(page: Page) -> tuple[bool, bool]:
     return True, has_header
 
 
+INDEX_TITLE_RE = re.compile(
+    r"(gri\s+content\s+index|indeks\s+(isi|konten)\s+gri|indeks\s+gri|gri\s+standards?\s+content\s+index|"
+    r"indeks\s+standar\s+gri)", re.I)
+
+
+def _page_ratio(page: Page) -> float:
+    """Porsi baris kode yang punya token halaman di sisi kanan (ciri tabel indeks tanpa judul kolom)."""
+    toks = _code_tokens(page)
+    if not toks:
+        return 0.0
+    hit = 0
+    for w, _ in toks:
+        row = [t for t in page.words if abs(t.y0 - w.y0) < 12 and t.x0 > w.x1 + 120 and not _in_margin(page, t)]
+        hit += any(_is_location_token(t) for t in row)
+    return hit / len(toks)
+
+
+def _weak_layout(page: Page) -> bool:
+    """Halaman lanjutan indeks dengan baris tinggi (hanya 2-4 kode per halaman)."""
+    toks = _code_tokens(page)
+    if len(toks) < 2:
+        return False
+    xs = [round(w.x0 / 15) for w, _ in toks]
+    return max(xs.count(x) for x in set(xs)) >= 2
+
+
 def find_index_pages(doc: Document) -> list[int]:
     """Halaman tabel indeks GRI: susunan kolom kode + header 'Halaman/Page'.
-    Halaman lanjutan tanpa header tetap diterima bila menyambung halaman indeks sebelumnya."""
+    Halaman lanjutan tanpa header tetap diterima bila menyambung halaman indeks sebelumnya.
+    Bila tidak ada satu pun (tabel tanpa judul kolom 'Halaman'), dicoba lagi: halaman berjudul
+    'Indeks Isi GRI'/'GRI Content Index' dengan sebagian besar baris kode berisi angka halaman."""
     pages: list[int] = []
     for page in doc.pages:
         table, header = _index_layout(page)
         if not table:
+            if pages and pages[-1] == page.number - 1 and _weak_layout(page):
+                pages.append(page.number)   # lanjutan indeks (baris tinggi, sedikit kode per halaman)
             continue
-        hint = bool(INDEX_HINT_RE.search(page.text)) or bool(re.search(r"\b(GRI|indeks|index)\b", page.text, re.I))
-        if (header and hint) or (pages and pages[-1] >= page.number - 2):
+        hint = bool(INDEX_HINT_RE.search(page.text)) or bool(re.search(r"\b(indeks|index)\b", page.text, re.I))
+        # tanpa kata "indeks/index": halaman pertama harus tampak seperti indeks (baris kode berisi angka halaman)
+        weak_hint = (not hint) and bool(re.search(r"\bGRI\b", page.text)) and _page_ratio(page) >= 0.6
+        if (header and (hint or weak_hint)) or (pages and pages[-1] >= page.number - 2):
+            pages.append(page.number)
+    if pages:
+        return pages
+    for page in doc.pages:
+        table, header = _index_layout(page)
+        if not table:
+            continue
+        titled = bool(INDEX_TITLE_RE.search(page.text))
+        if (titled and _page_ratio(page) >= 0.5) or (pages and pages[-1] >= page.number - 2 and _page_ratio(page) >= 0.5):
             pages.append(page.number)
     return pages
 
@@ -153,18 +194,35 @@ def _is_location_token(t: Word) -> bool:
     s = t.text.strip()
     if re.fullmatch(r"\d{1,3}([.,]\d{3}){2,}", s) or ",000" in s or ".000" in s:
         return False   # angka ribuan (mis. 1,000,000), bukan nomor halaman
-    return bool(PAGE_TOKEN_RE.match(s) or URL_RE.search(s) or LOCATION_WORD_RE.match(s))
+    inner = s.strip("[]()")          # halaman ditulis dalam kurung, mis. "[22]" atau "(41,44)"
+    return bool(PAGE_TOKEN_RE.match(s) or (inner and inner != s and PAGE_TOKEN_RE.match(inner))
+                or URL_RE.search(s) or LOCATION_WORD_RE.match(s))
 
 
-def _parse_page(page: Page, index: GriIndex) -> None:
+def _parse_page(page: Page, index: GriIndex, carry: dict | None = None) -> None:
     toks = _code_tokens(page)
     first_code_y = _first_code_y(toks)
     # header kolom "Halaman/Page": harus berada di atas kode pertama (kepala tabel)
     headers = [w for w in page.words if _is_page_header(w.text)
                and w.y0 < first_code_y - 3 and not _in_margin(page, w)]
+    strong = [h for h in headers if re.search(r"(halaman|page|hal\.?|lokasi|location)", h.text, re.I)]
+    if strong:
+        headers = strong     # kata lemah ("Rujukan" di judul halaman) diabaikan bila ada judul kolom yang jelas
+    if headers and not strong and carry and carry.get("hdr"):
+        headers = []      # kata "rujukan" di isi tabel bukan judul kolom: pakai posisi kolom dari halaman sebelumnya
     if headers:   # hanya baris kepala tabel paling atas (bukan kata "Lokasi" di judul item)
         top = min(h.y0 for h in headers)
         headers = [h for h in headers if h.y0 <= top + 30]
+        if carry is not None:
+            carry["hdr"] = [(h.x0, h.x1, h.text) for h in headers]
+            carry["codex"] = sorted(w.x0 for w, _ in toks)[len(toks) // 2]
+    elif carry and carry.get("hdr"):
+        # halaman lanjutan tanpa judul kolom: pakai posisi kolom "Halaman" dari halaman sebelumnya
+        # (bila kolom kode berada di tempat yang kurang lebih sama)
+        cx = sorted(w.x0 for w, _ in toks)[len(toks) // 2]
+        shift = cx - carry.get("codex", cx)       # halaman kiri/kanan memiliki margin berbeda
+        if abs(shift) < 150:
+            headers = [Word(x0 + shift, -50.0, x1 + shift, -40.0, t) for x0, x1, t in carry["hdr"]]
     other_hdr_x = sorted({round(w.x0) for w in page.words if w.y0 < first_code_y - 3 and re.match(
         r"^(omission|alasan|keterangan|pengecualian|reason|sdgs?|pojk|description|deskripsi)$",
         w.text.strip(), re.I)})
@@ -172,8 +230,12 @@ def _parse_page(page: Page, index: GriIndex) -> None:
 
     for w, code in toks:
         below = [t for t, _ in toks if abs(t.x0 - w.x0) < 30 and t.y0 > w.y0 + 3]
+        above = [t for t, _ in toks if abs(t.x0 - w.x0) < 30 and t.y0 < w.y0 - 3]
         next_y = min((t.y0 for t in below), default=w.y0 + 60)
-        y_top, y_bot = w.y0 - 8, min(next_y - 4, w.y0 + 45)
+        prev_y = max((t.y0 for t in above), default=w.y0 - 16)
+        # batas baris = titik tengah antar kode (nilai halaman sering sedikit di atas/bawah kode)
+        y_top = max((prev_y + w.y0) / 2, w.y0 - 30) if above else w.y0 - 8
+        y_bot = min((w.y0 + next_y) / 2, w.y0 + 45) if below else w.y0 + 45
         row_words = [t for t in body if y_top <= t.y0 <= y_bot and t.x0 > w.x1 - 1
                      and not CODE_TOKEN_RE.match(t.text.strip())]
         row_text = " ".join(t.text for t in row_words)
@@ -197,7 +259,8 @@ def _parse_page(page: Page, index: GriIndex) -> None:
 
 def parse_gri_index(doc: Document) -> GriIndex:
     index = GriIndex()
+    carry: dict = {}
     for n in find_index_pages(doc):
         index.pages.append(n)
-        _parse_page(doc.pages[n - 1], index)
+        _parse_page(doc.pages[n - 1], index, carry)
     return index
