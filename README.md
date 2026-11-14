@@ -31,15 +31,17 @@ Bagian 1–10 menjelaskan program A. Program B dijelaskan di [bagian 11](#11-pro
 
 ## 1. Status hasil saat ini
 
-Seluruh **70 laporan** (DOID, DSSA, ELSA, INDY, ITMG, PTRO, WINS, BRMS, BRPT, INRU, INTP, MDKA, SMCB, GGRP × 2020–2024) sudah dinilai.
+Seluruh **95 laporan** (DOID, DSSA, ELSA, INDY, ITMG, PTRO, WINS, BRMS, BRPT, INRU, INTP, MDKA, SMCB, GGRP, MEDC, PGAS, INCO, ISSP, WTON × 2020–2024) sudah dinilai.
 File hasil ada di folder [`hasil/`](hasil):
 
 | File | Isi |
 |---|---|
-| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk 14 perusahaan (DEWA tetap seperti aslinya, nilai dikoreksi) |
+| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk 19 perusahaan (DEWA tetap seperti aslinya, nilai dikoreksi) |
 | `hasil/BUKTI PENILAIAN - DATA SKRIPSI.xlsx` | Ringkasan skor + alasan/bukti setiap poin (halaman PDF) |
 | `screening/Screening_Dataset_ESG.xlsx` | Penyaringan 94 emiten (syarat: SR 2020–2024 ber-GRI, laporan tahunan 2020–2025) beserta bukti per dokumen |
 | `screening/tautan_laporan_9_emiten.csv` | Tautan resmi 99 PDF (SR & laporan tahunan) 9 emiten yang lolos penyaringan |
+| `screening/Screening_73_Emiten_ESG.xlsx` | Penyaringan 73 emiten tambahan (lolos: MEDC, PGAS, INCO, ISSP, WTON; SMGR kurang AR 2020) beserta bukti per dokumen |
+| `screening/tautan_laporan_emiten_layak_2.csv` | Tautan resmi dokumen 5 emiten yang lolos (plus SMGR) |
 
 **Skor ESG Disclosure**
 
@@ -60,6 +62,11 @@ File hasil ada di folder [`hasil/`](hasil):
 | MDKA | 0,3281 | 0,4740 | 0,7604 | 0,8750 | 0,8333 |
 | SMCB | 0,3229 | 0,4271 | 0,6146 | 0,8125 | 0,9479 |
 | GGRP | 0,1771 | 0,2396 | 0,3854 | 0,6250 | 0,6562 |
+| MEDC | 0,2979 | 0,3049 | 0,7708 | 0,7812 | 0,7708 |
+| PGAS | 0,8385 | 0,8385 | 0,8438 | 0,8646 | 0,9583 |
+| INCO | 0,6432 | 0,7917 | 0,9896 | 1,0000 | 0,9167 |
+| ISSP | 0,2986 | 0,2273 | 0,7188 | 0,7188 | 0,7188 |
+| WTON | 0,3750 | 0,4219 | 0,6458 | 0,7708 | 0,8854 |
 
 **Akurasi terhadap penilaian manual DEWA (5 tahun, setelah koreksi): 590 dari 590 baris sama (100%).**
 Empat nilai manual DEWA dikoreksi sesuai aturan (sudah dikonfirmasi): 2020 item 405-1 → 1 (indeks
@@ -89,6 +96,10 @@ baris tidak lagi "bocor" ke baris di bawahnya (sebelumnya item 2-20 ikut mendapa
   (hanya kolom "Keterangan"). Menurut aturan di atas, item yang tercantum tanpa halaman diberi 0 kecuali nomor itemnya tertulis di
   isi laporan, sehingga skor tahun-tahun ini bisa lebih rendah dari kenyataan. **Mohon putuskan apakah tabel jenis ini
   dianggap memenuhi rujukan** (bila ya, skor SMCB 2020–2022 dan 2024 akan naik).
+- **MEDC** menerbitkan indeks GRI sebagai **dokumen terpisah** (`2020_GRI.pdf` … `2024_GRI.pdf`). Taruh keduanya di folder yang sama
+  (`MEDC/2022.pdf` + `MEDC/2022_GRI.pdf`); halamannya digabung otomatis. MEDC 2020–2021 (GRI 2016 Core) memang rendah (~0,30).
+- **ISSP 2021**: SR-nya **tidak punya tabel indeks GRI** (hanya tanda kode di akhir paragraf), jadi hanya sedikit item terbaca (0,2273).
+  Skor ini kemungkinan lebih rendah dari kenyataan; mohon dicek manual.
 - **BRPT 2020–2023** dan **GGRP 2020–2021** hanya memuat 43–49 kode di indeks GRI (opsi "Core" ringkas), jadi skornya rendah.
 - **INRU 2020 dan 2021** kebetulan sama-sama 0,2552 (jumlah poin sama, 38 dari 118 baris, dengan dua baris berbeda yang saling
   menggantikan); bukan salin-tempel.
