@@ -27,7 +27,9 @@ EXCLUDE = re.compile(
     r"uang\s+muka|advance|derivatif|derivative|provisi|penyisihan|provision|dividen|dividend|kontrak|contract|"
     r"dimiliki\s+untuk\s+dijual|held\s+for\s+sale|"
     r"kontinjensi|contingent|tunjangan|hari\s+raya|\bthr\b|jumlah|total|sub\s*jumlah|"
-    r"pembongkaran|dismantl|decommission|reklamasi|restorasi|rehabilitasi)", re.I)
+    r"pembongkaran|dismantl|decommission|reklamasi|restorasi|rehabilitasi|"
+    r"utang\s+retensi|retention\s+payables?|uang\s+jaminan|jaminan\s+(sewa|dari\s+pelanggan|pelanggan)|"
+    r"rental\s+deposits?|security\s+deposits?|customer\s+deposits?|deposit\s+(dari|pada)\s+pelanggan)", re.I)
 # kata yang hanya "lemah": pos "Pinjaman ... lainnya" tetap utang berbunga
 EXCLUDE_WEAK = re.compile(r"(lainnya\b|other\s+(current|non-?current|long-term|short-term)\s+liabilit)", re.I)
 INCLUDE = re.compile(

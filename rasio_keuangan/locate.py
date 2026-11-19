@@ -62,22 +62,30 @@ def find_statements(texts: list[str]) -> tuple[list[int], list[int]]:
                     and re.search(r"(beban|biaya)\s+(keuangan|bunga|pendanaan)|financ(e|ing)\s+(cost|charge|expense)|"
                                   r"interest\s+expense|financial\s+charges", t, re.I))
 
-    for i in range(n):
-        if not is_bs(i):
-            continue
-        run = [i]
-        j = i + 1
-        while j < n and len(run) < 4 and is_bs(j):
-            run.append(j)
-            j += 1
-        # laba rugi dalam 0-4 halaman setelah neraca
-        for k in range(j, min(n, j + 4)):
-            if is_is(k):
-                inc = [k]
-                if k + 1 < n and IS_TITLE.search(texts[k + 1][:900]) and _has_amount_rows(texts[k + 1]) \
-                        and not BS_TITLE.search(texts[k + 1][:900]):
-                    inc.append(k + 1)
-                return [p + 1 for p in run], [p + 1 for p in inc]
+    def is_is_loose(i):   # laba rugi tanpa baris beban keuangan (perusahaan tanpa utang berbunga, mis. TOTL)
+        t = texts[i]
+        return bool(IS_TITLE.search(t[:900]) and NOTES_HDR.search(t) and _has_amount_rows(t)
+                    and not BS_TITLE.search(t[:900]))
+
+    # lintasan 1: laba rugi wajib memuat beban keuangan; lintasan 2 (cadangan, hanya bila lintasan 1
+    # tidak menemukan apa pun): laba rugi pertama setelah neraca, beban keuangan dicatat "tidak ditemukan"
+    for check in (is_is, is_is_loose):
+        for i in range(n):
+            if not is_bs(i):
+                continue
+            run = [i]
+            j = i + 1
+            while j < n and len(run) < 4 and is_bs(j):
+                run.append(j)
+                j += 1
+            # laba rugi dalam 0-4 halaman setelah neraca
+            for k in range(j, min(n, j + 4)):
+                if check(k):
+                    inc = [k]
+                    if k + 1 < n and IS_TITLE.search(texts[k + 1][:900]) and _has_amount_rows(texts[k + 1]) \
+                            and not BS_TITLE.search(texts[k + 1][:900]):
+                        inc.append(k + 1)
+                    return [p + 1 for p in run], [p + 1 for p in inc]
     return [], []
 
 

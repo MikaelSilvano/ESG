@@ -31,12 +31,12 @@ Bagian 1–10 menjelaskan program A. Program B dijelaskan di [bagian 11](#11-pro
 
 ## 1. Status hasil saat ini
 
-Seluruh **125 laporan** (DOID, DSSA, ELSA, INDY, ITMG, PTRO, WINS, BRMS, BRPT, INRU, INTP, MDKA, SMCB, GGRP, MEDC, PGAS, INCO, ISSP, WTON, SSIA, TBIG, TLKM, TOWR, POWR, IPCM × 2020–2024) sudah dinilai.
+Seluruh **130 laporan** (DOID, DSSA, ELSA, INDY, ITMG, PTRO, WINS, BRMS, BRPT, INRU, INTP, MDKA, SMCB, GGRP, MEDC, PGAS, INCO, ISSP, WTON, SSIA, TBIG, TLKM, TOWR, POWR, IPCM, TOTL × 2020–2024) sudah dinilai.
 File hasil ada di folder [`hasil/`](hasil):
 
 | File | Isi |
 |---|---|
-| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk 25 perusahaan (DEWA tetap seperti aslinya, nilai dikoreksi) |
+| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk 26 perusahaan (DEWA tetap seperti aslinya, nilai dikoreksi) |
 | `hasil/BUKTI PENILAIAN - DATA SKRIPSI.xlsx` | Ringkasan skor + alasan/bukti setiap poin (halaman PDF) |
 | `screening/Screening_Dataset_ESG.xlsx` | Penyaringan 94 emiten (syarat: SR 2020–2024 ber-GRI, laporan tahunan 2020–2025) beserta bukti per dokumen |
 | `screening/tautan_laporan_9_emiten.csv` | Tautan resmi 99 PDF (SR & laporan tahunan) 9 emiten yang lolos penyaringan |
@@ -74,6 +74,7 @@ File hasil ada di folder [`hasil/`](hasil):
 | TOWR | 0,3620 | 0,4661 | 0,6875 | 0,6667 | 0,7083 |
 | POWR | 0,6823 | 0,6641 | 0,8021 | 0,9479 | 0,8333 |
 | IPCM | 0,2240 | 0,2240 | 0,4896 | 0,5000 | 0,5000 |
+| TOTL | 0,4740 | 0,4740 | 0,6354 | 0,6458 | 0,6250 |
 
 **Akurasi terhadap penilaian manual DEWA (5 tahun, setelah koreksi): 590 dari 590 baris sama (100%).**
 Empat nilai manual DEWA dikoreksi sesuai aturan (sudah dikonfirmasi): 2020 item 405-1 → 1 (indeks
@@ -359,7 +360,7 @@ dalam laporan tahunan, lalu mengisi sheet **CoD** dan **Vab. X** pada *RATIO DAT
 
 | File | Isi |
 |---|---|
-| `hasil/RATIO DATA SKRIPSI - HASIL.xlsx` | Excel RATIO DATA SKRIPSI dengan sheet CoD & Vab. X terisi untuk 20 perusahaan (14 sebelumnya + SSIA, TBIG, TLKM, TOWR, POWR, IPCM; DEWA tetap seperti aslinya) |
+| `hasil/RATIO DATA SKRIPSI - HASIL.xlsx` | Excel RATIO DATA SKRIPSI dengan sheet CoD & Vab. X terisi untuk 21 perusahaan (14 sebelumnya + SSIA, TBIG, TLKM, TOWR, POWR, IPCM, TOTL; DEWA tetap seperti aslinya). TOTL tidak memiliki pinjaman bank/obligasi dan tidak menyajikan beban keuangan, sehingga CoD dan Interest Coverage TOTL dikosongkan (bukan 0%) |
 | `hasil/BUKTI RASIO - RATIO DATA SKRIPSI.xlsx` | Bukti setiap angka: laporan tahunan sumber, halaman PDF, nama pos di laporan; rincian pos utang berbunga yang masuk/tidak masuk; daftar yang perlu dicek |
 
 **Cost of Debt (CoD)** = Beban keuangan ÷ rata-rata utang berbunga (tahun t dan t-1)

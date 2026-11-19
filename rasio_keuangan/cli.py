@@ -140,18 +140,26 @@ def cmd_isi(a) -> None:
                 wc[f"C{r}"].value = num(ie.value) if ie else None
             wc[f"D{r}"].value = sum_formula([v for _, v in d_t.lines]) if d_t else None
             wc[f"E{r}"].value = sum_formula([v for _, v in d_p.lines]) if d_p else None
-            if d_t and d_p:
+            cod_skip = ""
+            if d_t and d_p and (ie is None or (d_t.total == 0 and d_p.total == 0)):
+                # tanpa beban keuangan / tanpa utang berbunga, CoD tidak terdefinisi (bukan 0%)
+                wc[f"F{r}"].value = f"=AVERAGE(D{r}:E{r})" if (d_t.total or d_p.total) else None
+                wc[f"G{r}"].value = None
+                cod_skip = ("CoD TIDAK DIHITUNG: beban keuangan tidak disajikan di laporan laba rugi" if ie is None
+                            else "CoD TIDAK DIHITUNG: tidak ada utang berbunga pada tahun t dan t-1")
+                ev_check.append((code, y, "CoD", cod_skip))
+            elif d_t and d_p:
                 wc[f"F{r}"].value = f"=AVERAGE(D{r}:E{r})"
                 wc[f"G{r}"].value = f"=C{r}/F{r}"
             else:   # rata-rata hanya dari satu tahun menyesatkan: dikosongkan, mohon isi manual
                 wc[f"F{r}"].value = None
                 wc[f"G{r}"].value = None
                 ev_check.append((code, y, "CoD", "Tidak dihitung: utang berbunga tahun t atau t-1 tidak ditemukan di laporan yang tersedia"))
-            notes = [f"Satuan: {unit.label}"]
+            notes = [f"Satuan: {unit.label}"] + ([cod_skip] if cod_skip else [])
             for tag, d in (("Utang t", d_t), ("Utang t-1", d_p)):
                 if d:
                     notes.append(f"{tag}: LT {d.source_year} hal. {d.page} ({'komparatif' if d.column == 'prev' else 'tahun berjalan'}) = "
-                                 + " + ".join(lab for lab, _ in d.lines))
+                                 + (" + ".join(lab for lab, _ in d.lines) or "tidak ada utang berbunga"))
                     if d.note:
                         notes.append(d.note)
                     for lab, v in d.lines:
