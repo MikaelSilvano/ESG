@@ -17,9 +17,9 @@ METRICS = {
     # nama: (pola label Indonesia, pola label Inggris, laporan)
     "total_aset": (re.compile(r"^(jumlah|total)\s+aset\s*$", re.I),
                    re.compile(r"^total\s+assets\s*$", re.I), "bs"),
-    "total_ekuitas": (re.compile(r"^((jumlah|total)\s+)?ekuitas(\s*[-–]\s*(neto|bersih))?\s*$|^(jumlah|total)\s+ekuitas\s*[-–]\s*(neto|bersih)$", re.I),
+    "total_ekuitas": (re.compile(r"^((jumlah|total)\s+)?ekuitas(\s*[-–]?\s*(neto|bersih))?\s*$", re.I),
                       re.compile(r"^total\s+equity\s*$", re.I), "bs"),
-    "pendapatan": (re.compile(r"^(pendapatan|penjualan)(\s+(usaha|bersih|neto|kontrak|dari|dan|pokok))*\b(?!.*(lain|bunga|keuangan|komprehensif|investasi))", re.I),
+    "pendapatan": (re.compile(r"^((total|jumlah)\s+)?(pendapatan|penjualan)(\s+(usaha|bersih|neto|kontrak|dari|dan|pokok))*\b(?!.*(lain|bunga|keuangan|komprehensif|investasi))", re.I),
                    re.compile(r"^(net\s+)?(revenues?|sales)\b(?!.*(other|interest|finance))", re.I), "is"),
     "laba_bruto": (re.compile(rf"^{PL}\s+(bruto|kotor)\b", re.I),
                    re.compile(r"^gross\s+(profit|loss|\(loss\)|income)", re.I), "is"),
@@ -73,6 +73,9 @@ def _match_net_income(row: Row) -> bool:
     lab = re.sub(r"\s+", " ", row.label).strip(" :")
     return bool(re.match(r"^(tahun|periode)\s+berjalan$", lab, re.I) and row.context and
                 _NI_CTX.match(row.context[-1].strip()) and not re.search(r"kompreh", " ".join(row.context), re.I))
+
+
+_FIN_HDR = re.compile(r"^((beban|biaya)\s+(keuangan|bunga|pendanaan)|(finance|financial|financing)\s+(costs?|charges?|expenses?))$", re.I)
 
 
 def _match(row: Row, ide, en) -> bool:
@@ -226,6 +229,14 @@ def _extract_pages(doc, texts, path, year, model, bs_items, is_items, unit_pages
             v = lambda x: abs(x) if (x is not None and name == "beban_keuangan") else x
             rf.facts[name] = Fact(v(r.cur), v(r.prev), r.page, r.full_label or r.label_en)
             break
+    fin = [r for r in rows["is"] if (r.cur is not None or r.prev is not None) and not r.is_total and
+           (_match(r, *METRICS["beban_keuangan"][:2]) or
+            (r.context and _FIN_HDR.match(re.sub(r"\s+", " ", " ".join(r.context[-2:-1] or r.context[-1:])).strip(" :")))
+            or (r.context and _FIN_HDR.match(re.sub(r"\s+", " ", r.context[-1]).strip(" :"))))]
+    if len(fin) > 1:
+        tot = lambda col: sum(abs(getattr(r, col)) for r in fin if getattr(r, col) is not None) if any(getattr(r, col) is not None for r in fin) else None
+        rf.facts["beban_keuangan"] = Fact(tot("cur"), tot("prev"), fin[0].page,
+                                         " + ".join((r.full_label or r.label_en) for r in fin))
     for r in rows["bs"]:
         if r.section in ("LJP", "LJPJ") and (r.cur or r.prev):
             if r.is_total or re.match(r"^(jumlah|total|sub\s*jumlah|subtotal|\(dipindahkan\)|dipindahkan|carried)", (r.label or r.label_en), re.I):

@@ -66,8 +66,8 @@ def total_asset_formula(row: int, unit: Unit, kurs_row: int | None) -> str:
     c = f"C{row}"
     if unit.currency == "USD":
         k = f"kurs!C{kurs_row}"
-        return {1: f"=({c}*{k})/10^3", 1000: f"={c}*{k}", 1_000_000: f"={c}*{k}*10^3"}[unit.scale]
-    return {1: f"={c}/10^3", 1000: f"={c}", 1_000_000: f"={c}*10^3"}[unit.scale]
+        return {1: f"=({c}*{k})/10^3", 1000: f"={c}*{k}", 1_000_000: f"={c}*{k}*10^3", 1_000_000_000: f"={c}*{k}*10^6"}[unit.scale]
+    return {1: f"={c}/10^3", 1000: f"={c}", 1_000_000: f"={c}*10^3", 1_000_000_000: f"={c}*10^6"}[unit.scale]
 
 
 def ensure_note_header(ws: Worksheet, col: int, text: str = "Catatan") -> None:

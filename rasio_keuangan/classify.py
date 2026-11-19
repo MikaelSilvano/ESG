@@ -31,7 +31,7 @@ EXCLUDE = re.compile(
 # kata yang hanya "lemah": pos "Pinjaman ... lainnya" tetap utang berbunga
 EXCLUDE_WEAK = re.compile(r"(lainnya\b|other\s+(current|non-?current|long-term|short-term)\s+liabilit)", re.I)
 INCLUDE = re.compile(
-    r"(pinjaman|\bloans?\b|borrowing|utang\s+bank|bank\s+loan|kredit|\bsewa\b|lease|obligasi|\bbonds?\b|\bnotes\b|"
+    r"(pinjaman|\bloans?\b|borrowing|utang\s+bank|bank\s+loan|kredit|\bsewa\b|lease|obligasi|\bbonds?\b|\bnotes\b|surat\s+utang|"
     r"sukuk|wesel|\bmtn\b|medium\s+term|utang\s+jangka\s+panjang|long-term\s+debt|lembaga\s+keuangan|"
     r"pembiayaan\s+konsumen|hak\s+guna|right[-\s]of[-\s]use)", re.I)
 OTHER_PAYABLE_3P = re.compile(r"(utang\s+lain-lain|other\s+(accounts\s+)?payables?)", re.I)

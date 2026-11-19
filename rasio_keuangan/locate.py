@@ -59,7 +59,7 @@ def find_statements(texts: list[str]) -> tuple[list[int], list[int]]:
         t = texts[i]
         head = t[:900]
         return bool(IS_TITLE.search(head) and NOTES_HDR.search(t) and _has_amount_rows(t)
-                    and re.search(r"(beban|biaya)\s+(keuangan|bunga)|finance\s+(cost|charge|expense)|"
+                    and re.search(r"(beban|biaya)\s+(keuangan|bunga|pendanaan)|financ(e|ing)\s+(cost|charge|expense)|"
                                   r"interest\s+expense|financial\s+charges", t, re.I))
 
     for i in range(n):

@@ -31,16 +31,17 @@ Bagian 1–10 menjelaskan program A. Program B dijelaskan di [bagian 11](#11-pro
 
 ## 1. Status hasil saat ini
 
-Seluruh **95 laporan** (DOID, DSSA, ELSA, INDY, ITMG, PTRO, WINS, BRMS, BRPT, INRU, INTP, MDKA, SMCB, GGRP, MEDC, PGAS, INCO, ISSP, WTON × 2020–2024) sudah dinilai.
+Seluruh **125 laporan** (DOID, DSSA, ELSA, INDY, ITMG, PTRO, WINS, BRMS, BRPT, INRU, INTP, MDKA, SMCB, GGRP, MEDC, PGAS, INCO, ISSP, WTON, SSIA, TBIG, TLKM, TOWR, POWR, IPCM × 2020–2024) sudah dinilai.
 File hasil ada di folder [`hasil/`](hasil):
 
 | File | Isi |
 |---|---|
-| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk 19 perusahaan (DEWA tetap seperti aslinya, nilai dikoreksi) |
+| `hasil/DATA SKRIPSI - HASIL.xlsx` | Excel DATA SKRIPSI dengan sheet ESGD terisi untuk 25 perusahaan (DEWA tetap seperti aslinya, nilai dikoreksi) |
 | `hasil/BUKTI PENILAIAN - DATA SKRIPSI.xlsx` | Ringkasan skor + alasan/bukti setiap poin (halaman PDF) |
 | `screening/Screening_Dataset_ESG.xlsx` | Penyaringan 94 emiten (syarat: SR 2020–2024 ber-GRI, laporan tahunan 2020–2025) beserta bukti per dokumen |
 | `screening/tautan_laporan_9_emiten.csv` | Tautan resmi 99 PDF (SR & laporan tahunan) 9 emiten yang lolos penyaringan |
 | `screening/Screening_73_Emiten_ESG.xlsx` | Penyaringan 73 emiten tambahan (lolos: MEDC, PGAS, INCO, ISSP, WTON; SMGR kurang AR 2020) beserta bukti per dokumen |
+| `screening/Screening_Infrastruktur_ESG.xlsx` | Penyaringan 41 emiten infrastruktur (lolos: SSIA, TBIG, TLKM, TOTL, TOWR, POWR, IPCM) |
 | `screening/tautan_laporan_emiten_layak_2.csv` | Tautan resmi dokumen 5 emiten yang lolos (plus SMGR) |
 
 **Skor ESG Disclosure**
@@ -67,6 +68,12 @@ File hasil ada di folder [`hasil/`](hasil):
 | INCO | 0,6432 | 0,7917 | 0,9896 | 1,0000 | 0,9167 |
 | ISSP | 0,2986 | 0,2273 | 0,7188 | 0,7188 | 0,7188 |
 | WTON | 0,3750 | 0,4219 | 0,6458 | 0,7708 | 0,8854 |
+| SSIA | 0,3839 | 0,6458 | 0,6771 | 0,7292 | 0,8125 |
+| TBIG | 0,3021 | 0,3646 | 0,4479 | 0,5312 | 0,5417 |
+| TLKM | 0,4198 | 0,4198 | 0,5729 | 0,6042 | 0,6667 |
+| TOWR | 0,3620 | 0,4661 | 0,6875 | 0,6667 | 0,7083 |
+| POWR | 0,6823 | 0,6641 | 0,8021 | 0,9479 | 0,8333 |
+| IPCM | 0,2240 | 0,2240 | 0,4896 | 0,5000 | 0,5000 |
 
 **Akurasi terhadap penilaian manual DEWA (5 tahun, setelah koreksi): 590 dari 590 baris sama (100%).**
 Empat nilai manual DEWA dikoreksi sesuai aturan (sudah dikonfirmasi): 2020 item 405-1 → 1 (indeks
@@ -352,7 +359,7 @@ dalam laporan tahunan, lalu mengisi sheet **CoD** dan **Vab. X** pada *RATIO DAT
 
 | File | Isi |
 |---|---|
-| `hasil/RATIO DATA SKRIPSI - HASIL.xlsx` | Excel RATIO DATA SKRIPSI dengan sheet CoD & Vab. X terisi untuk 14 perusahaan (DEWA tetap seperti aslinya) |
+| `hasil/RATIO DATA SKRIPSI - HASIL.xlsx` | Excel RATIO DATA SKRIPSI dengan sheet CoD & Vab. X terisi untuk 20 perusahaan (14 sebelumnya + SSIA, TBIG, TLKM, TOWR, POWR, IPCM; DEWA tetap seperti aslinya) |
 | `hasil/BUKTI RASIO - RATIO DATA SKRIPSI.xlsx` | Bukti setiap angka: laporan tahunan sumber, halaman PDF, nama pos di laporan; rincian pos utang berbunga yang masuk/tidak masuk; daftar yang perlu dicek |
 
 **Cost of Debt (CoD)** = Beban keuangan ÷ rata-rata utang berbunga (tahun t dan t-1)
@@ -377,6 +384,10 @@ dalam laporan tahunan, lalu mengisi sheet **CoD** dan **Vab. X** pada *RATIO DAT
 Tahun mengikuti contoh DEWA: **Vab. X 2020–2024** dan **CoD 2021–2025**.
 
 **Yang perlu dicek manual (ada di sheet CEK MANUAL pada file bukti):**
+- **Pembaruan program rasio (Nov 2026):** satuan *miliaran Rupiah* kini dikenali (TLKM); "Ekuitas neto" tanpa tanda hubung,
+  "Total Penjualan Neto", dan "Biaya pendanaan" dikenali; beban keuangan yang dipecah beberapa baris (mis. TBIG 2024–2025:
+  "Utang bank, obligasi dan sukuk" + "Beban keuangan lain") kini dijumlahkan; "Surat utang" selalu utang berbunga.
+  Uji DEWA tetap 29/36. Laporan keuangan terpisah dipakai untuk TLKM 2020–2025 (AR Telkom tidak memuat laporan keuangan) dan POWR 2025.
 - **INRU 2020–2022**: laporan keuangan di laporan tahunannya berupa **gambar hasil pindaian** (tanpa teks), sehingga Vab. X 2020–2021 dan
   CoD 2021–2022 dikosongkan. Vab. X 2022 diambil dari kolom komparatif laporan tahunan 2023. Isi manual dari laporan keuangan auditan
   (IDX), atau jalankan `RASIO_OCR=1 python3 rasio.py isi ...` (OCR, lambat ±6 menit per laporan dan angkanya wajib dicek).

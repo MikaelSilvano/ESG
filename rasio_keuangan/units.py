@@ -8,12 +8,12 @@ import re
 @dataclass(frozen=True)
 class Unit:
     currency: str      # "USD" atau "IDR"
-    scale: int         # 1, 1_000, 1_000_000
+    scale: int         # 1, 1_000, 1_000_000, 1_000_000_000
 
     @property
     def label(self) -> str:
         """Teks satuan untuk kolom 'Satuan Nominal' (seperti contoh DEWA)."""
-        prefix = {1: "", 1_000: "ribuan ", 1_000_000: "jutaan "}[self.scale]
+        prefix = {1: "", 1_000: "ribuan ", 1_000_000: "jutaan ", 1_000_000_000: "miliaran "}[self.scale]
         cur = "dolar AS" if self.currency == "USD" else "Rupiah"
         return (prefix + cur) if prefix else cur
 
@@ -32,6 +32,7 @@ PATTERNS = [
                 r"(rupiah\s+penuh|full\s+rupiah|rupiah\s+full)", re.I), Unit("IDR", 1)),
     (re.compile(r"(ribuan|thousands?\s+of)\s+(dolar|dollar|us\s*dollar|us\$|united\s+states)", re.I), Unit("USD", 1000)),
     (re.compile(r"(jutaan|millions?\s+of)\s+(dolar|dollar|us\$|united\s+states)", re.I), Unit("USD", 1_000_000)),
+    (re.compile(r"(miliaran|milyaran|billions?\s+of)\s+(rupiah|rp)|in\s+billions\s+of\s+(rupiah|rp)|rp\s*miliar", re.I), Unit("IDR", 1_000_000_000)),
     (re.compile(r"(jutaan|millions?\s+of)\s+(rupiah|rp)", re.I), Unit("IDR", 1_000_000)),
     (re.compile(r"(ribuan|thousands?\s+of)\s+(rupiah|rp)", re.I), Unit("IDR", 1000)),
     (re.compile(r"(disajikan|dinyatakan|expressed|presented|\(dalam|\(in)[^.)]{0,25}(dolar\s+amerika|united\s+states\s+dollar|us\s*dollar|dolar\s+as|us\$)", re.I), Unit("USD", 1)),
